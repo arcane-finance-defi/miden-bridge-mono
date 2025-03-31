@@ -1,0 +1,3 @@
+[submodule "evm"]
+	path = evm
+	url = git@github.com:arcane-finance-defi/miden-bridge-evm

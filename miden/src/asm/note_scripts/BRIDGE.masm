@@ -1,0 +1,22 @@
+use.miden::account
+use.miden::note
+
+const.MIN_INPUTS_COUNT=12
+
+# ERRORS
+# =================================================================================================
+
+# BRIDGE too low inputs count
+const.ERR_BRIDGE_WRONG_NUMBER_OF_INPUTS=0x0002d001
+
+#! BRIDGE script: do nothing. Holds relayer event data in its inputs
+#!
+#! Inputs:  Relayer event serialized data
+
+begin
+    # store the note inputs to memory starting at address 0
+    push.0 exec.note::get_inputs
+    # => [num_inputs, inputs_ptr]
+
+    gte.MIN_INPUTS_COUNT assert.err=ERR_BRIDGE_WRONG_NUMBER_OF_INPUTS
+end

@@ -1,0 +1,15 @@
+[package]
+name = "miden-tx-sender"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eyre = "0.6.12"
+miden-client = {version = "0.7.2", features = ["tokio", "concurrent", "tonic"]}
+miden-crypto = "0.13.3"
+miden-objects = "0.7.2"
+rocket = { version = "0.5.1", features = ["json"] }
+thiserror = "2.0.12"
+serde = { version = "1.0.219", features = ["derive"] }
+rand = "0.8.5"
+dotenv = "0.15.0"
