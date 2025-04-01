@@ -1,11 +1,10 @@
 extern crate alloc;
-mod common;
 
-mod contracts;
+use miden_objects::utils::Deserializable;
+use miden_tx::TransactionProver;
 
-mod notes;
-mod common;
 mod account;
+mod common;
 // HELPER FUNCTIONS
 // ================================================================================================
 
@@ -27,3 +26,4 @@ macro_rules! assert_transaction_executor_error {
         }
     };
 }
+

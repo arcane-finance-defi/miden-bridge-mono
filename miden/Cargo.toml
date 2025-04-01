@@ -35,7 +35,7 @@ winter-maybe-async = { version = "0.10" }
 [build-dependencies]
 regex = { version = "1.10" }
 walkdir = { version = "2.5" }
-miden-assembly = "0.13.0"
+miden-assembly = { version = "0.13.0", features = ["std"] }
 miden-stdlib = "0.13.1"
 miden-lib = { git = "https://github.com/0xPolygonMiden/miden-base", tag = "v0.8.1" }
 miden-objects = { git = "https://github.com/0xPolygonMiden/miden-base", tag = "v0.8.1" }
