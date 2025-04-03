@@ -2,7 +2,7 @@ use.miden::account
 use.miden::faucet
 use.miden::tx
 use.miden::note
-use.std::crypto::hashes::rpo
+use.std::sys
 
 #CONSTANTS
 # =================================================================================================
@@ -17,8 +17,8 @@ const.BRIDGE_NOTE_CODE_COMMITMENT_FELT4={bridge_note_code_commitment_felt_4}
 const.SERIAL_NUM_SLOT=4
 const.INPUTS_SLOT=16
 
-const.INPUTS_NUM_WORDS_LOC=1
-const.INPUTS_INDEX_LOC=2
+const.INPUTS_NUM_WORDS_LOC=0
+const.INPUTS_INDEX_LOC=1
 
 #! Burns fungible assets and emits public notes with BRIDGE_EVENT tag and event payload in its inputs
 #!
@@ -45,7 +45,7 @@ const.INPUTS_INDEX_LOC=2
 #! - the amount about to be burned is greater than the outstanding supply of the asset.
 #!
 #! Invocation: call
-export.bridge.4
+export.bridge.2
     mem_storew.SERIAL_NUM_SLOT dropw
 
     # burning the asset
@@ -83,15 +83,12 @@ export.bridge.4
 
     loc_load.INPUTS_NUM_WORDS_LOC mul.4 push.INPUTS_SLOT
     exec.note::compute_inputs_commitment
-    debug.stack.4
     # => [INPUTS_COMMITMENT, ...]
 
     push.BRIDGE_NOTE_CODE_COMMITMENT_FELT1.BRIDGE_NOTE_CODE_COMMITMENT_FELT2.BRIDGE_NOTE_CODE_COMMITMENT_FELT3.BRIDGE_NOTE_CODE_COMMITMENT_FELT4
-    debug.stack.4
     # => [SCRIPT_COMMITMENT, INPUTS_COMMITMENT]
 
-    mem_loadw.SERIAL_NUM_SLOT
-    debug.stack.4
+    padw mem_loadw.SERIAL_NUM_SLOT
     # => [SERIAL_NUM, SCRIPT_ROOT, INPUTS_COMMITMENT]
 
     exec.tx::build_recipient_hash
@@ -101,4 +98,6 @@ export.bridge.4
     # => [tag, aux, note_type, execution_hint, RECIPIENT]
     exec.tx::create_note
     # => [note_idx, pad(15)]
+
+    exec.sys::truncate_stack
 end

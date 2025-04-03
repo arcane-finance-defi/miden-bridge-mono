@@ -1,4 +1,3 @@
-use std::hash::Hash;
 use std::sync::Arc;
 use miden_assembly::diagnostics::IntoDiagnostic;
 use miden_assembly::Report;
@@ -6,9 +5,8 @@ use miden_lib::AuthScheme;
 use miden_lib::transaction::TransactionKernel;
 use miden_objects::account::{AccountId, AccountIdAnchor, AccountStorageMode, AuthSecretKey};
 use miden_objects::asset::{FungibleAsset, TokenSymbol};
-use miden_objects::{Felt, FieldElement, Hasher, Word};
+use miden_objects::{Felt, FieldElement, Word};
 use miden_objects::crypto::dsa::rpo_falcon512::{PublicKey, SecretKey};
-use miden_objects::crypto::hash::rpo::Rpo256;
 use miden_objects::crypto::rand::{FeltRng, RpoRandomCoin};
 use miden_objects::note::{Note, NoteAssets, NoteExecutionHint, NoteExecutionMode, NoteId, NoteInputs, NoteMetadata, NoteRecipient, NoteTag, NoteType};
 use miden_objects::testing::account_id::ACCOUNT_ID_SENDER;
@@ -235,19 +233,6 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
             &[note.clone().id()],
             &[]
         );
-
-    println!("Expected recipient hash: {:?}",
-             expected_recipient.clone().digest().as_elements()
-    );
-    println!("Expected inputs hash: {:?}",
-             expected_note.recipient().inputs().commitment().as_elements()
-    );
-    println!("Expected script hash: {:?}", Rpo256::hash_elements(
-        expected_note.recipient().script().root().as_elements()).as_elements()
-    );
-    println!("Expected serial num: {:?}",
-             expected_note.recipient().serial_num()
-    );
 
 
     let executed_transaction = execute_with_debugger(

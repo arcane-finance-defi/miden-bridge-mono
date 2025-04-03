@@ -138,7 +138,10 @@ fn compile_event_note_scripts(source_dir: &Path, target_dir: &Path) -> Result<BT
 
         let file_name = masm_file_path.file_name().unwrap().to_owned();
 
-        result.insert(file_name.clone(), NoteScript::new(code).root());
+        result.insert(
+            file_name.clone(),
+            NoteScript::new(code).root()
+        );
     }
     Ok(result)
 }

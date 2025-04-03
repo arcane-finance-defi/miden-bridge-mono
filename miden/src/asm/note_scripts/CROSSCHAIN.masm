@@ -1,6 +1,7 @@
 use.miden::account
 use.miden::note
 use.bridge::fungible_wrapper
+use.std::sys
 
 # ERRORS
 # =================================================================================================
@@ -65,4 +66,5 @@ begin
     padw push.INPUTS_PTR mem_loadw
 
     call.fungible_wrapper::bridge
+    exec.sys::truncate_stack
 end

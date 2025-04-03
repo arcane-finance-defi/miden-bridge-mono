@@ -1,8 +1,7 @@
 use alloc::{sync::Arc, vec::Vec};
 use miden_objects::{note::NoteId, transaction::ExecutedTransaction};
 use miden_tx::{testing::TransactionContext, TransactionExecutor, TransactionExecutorError};
-use miden_tx::auth::{BasicAuthenticator, TransactionAuthenticator};
-use rand_chacha::ChaCha20Rng;
+use miden_tx::auth::TransactionAuthenticator;
 use winter_maybe_async::*;
 
 #[maybe_async]
