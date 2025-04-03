@@ -4,8 +4,8 @@ use miden_lib::AuthScheme;
 use crate::accounts::components::token_wrapper_account_library;
 
 use miden_objects::asset::TokenSymbol;
-use miden_objects::{AccountError, Felt, FieldElement, Word};
-use miden_objects::account::{Account, AccountBuilder, AccountComponent, AccountIdAnchor, AccountStorageMode, AccountType, StorageSlot};
+use miden_objects::{AccountError, Felt, Word};
+use miden_objects::account::{Account, AccountBuilder, AccountComponent, AccountIdAnchor, AccountStorageMode, AccountType};
 use miden_objects::note::NoteTag;
 use miden_objects::utils::sync::LazyLock;
 
@@ -22,8 +22,6 @@ pub struct TokenWrapperAccount {
 }
 
 impl TokenWrapperAccount {
-    const MAX_MAX_SUPPLY: u64 = (1 << 63) - 1;
-    const MAX_DECIMALS: u8 = 12;
 
     // CONSTRUCTORS
     // --------------------------------------------------------------------------------------------
@@ -37,7 +35,7 @@ impl TokenWrapperAccount {
 
 
 impl From<TokenWrapperAccount> for AccountComponent {
-    fn from(faucet: TokenWrapperAccount) -> Self {
+    fn from(_faucet: TokenWrapperAccount) -> Self {
 
         AccountComponent::new(token_wrapper_account_library(), vec![])
             .expect("basic fungible faucet component should satisfy the requirements of a valid account component")

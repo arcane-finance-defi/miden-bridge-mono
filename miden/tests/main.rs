@@ -1,7 +1,5 @@
 extern crate alloc;
 
-use miden_objects::utils::Deserializable;
-use miden_tx::TransactionProver;
 
 mod account;
 mod common;

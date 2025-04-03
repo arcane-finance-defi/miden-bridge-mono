@@ -17,8 +17,8 @@ const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_ASSETS=0x0003b001
 
 const.INPUTS_NUM_PTR=0
 const.INPUTS_INDEX_PTR=1
-const.ASSETS_PTR=4
-const.INPUTS_PTR=8
+const.ASSETS_PTR=8
+const.INPUTS_PTR=16
 
 
 #! CROSSCHAIN script: burns the asset and emits the bridge exit event as public note
@@ -28,7 +28,6 @@ const.INPUTS_PTR=8
 #!
 #! Inputs:
 #!   - OUTPUT_NOTE_SERIAL_NUM
-#!   - ASSET
 #!   - dest_chain_id
 #!   - dest_chain_addr_felt1
 #!   - dest_chain_addr_felt2
@@ -43,8 +42,7 @@ begin
     push.INPUTS_PTR exec.note::get_inputs
     # => [num_inputs, inputs_ptr]
 
-    dup u32divmod.4 neq.0 add mem_store.INPUTS_NUM_PTR
-    push.1 mem_store.INPUTS_INDEX_PTR
+    dup u32divmod.4 neq.0 add dup mem_store.INPUTS_NUM_PTR sub.1 mem_store.INPUTS_INDEX_PTR
 
     gte.12 assert.err=ERR_CROSSCHAIN_WRONG_NUMBER_OF_INPUTS
     drop
@@ -55,15 +53,16 @@ begin
     eq.1 assert.err=ERR_CROSSCHAIN_WRONG_NUMBER_OF_ASSETS
     drop
 
-    padw mem_loadw.INPUTS_PTR
-    padw mem_loadw.ASSETS_PTR
 
-    mem_load.INPUTS_INDEX_PTR mem_load.INPUTS_NUM_PTR lt
+    mem_load.INPUTS_INDEX_PTR gt.0
     while.true
         padw mem_load.INPUTS_INDEX_PTR mul.4 add.INPUTS_PTR mem_loadw
-        mem_load.INPUTS_INDEX_PTR add.1 mem_store.INPUTS_INDEX_PTR
-        mem_load.INPUTS_INDEX_PTR mem_load.INPUTS_NUM_PTR lt
+        mem_load.INPUTS_INDEX_PTR sub.1 mem_store.INPUTS_INDEX_PTR
+        mem_load.INPUTS_INDEX_PTR gt.0
     end
+
+    padw mem_loadw.ASSETS_PTR
+    padw push.INPUTS_PTR mem_loadw
 
     call.fungible_wrapper::bridge
 end

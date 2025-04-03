@@ -615,6 +615,7 @@ dependencies = [
  "miden-prover 0.11.0",
  "miden-stdlib",
  "miden-tx",
+ "rand_chacha 0.9.0",
  "regex",
  "walkdir",
  "winter-maybe-async 0.10.1",
