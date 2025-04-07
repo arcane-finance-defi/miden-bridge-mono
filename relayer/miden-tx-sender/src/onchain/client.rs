@@ -3,14 +3,14 @@ use miden_client::block::BlockHeader;
 use miden_client::Client;
 use miden_client::note::BlockNumber;
 use miden_client::rpc::{Endpoint, NodeRpcClient, TonicRpcClient};
-use miden_client::store::{Store, StoreAuthenticator};
+use miden_client::store::{StoreAuthenticator};
+use miden_client::store::sqlite_store::SqliteStore;
 use miden_client::transaction::{LocalTransactionProver, TransactionProver, TransactionRequest};
 use miden_crypto::rand::RpoRandomCoin;
 use miden_objects::account::{AccountDelta, AccountId, AuthSecretKey};
 use miden_objects::Felt;
 use rand::Rng;
 use crate::onchain::errors::OnchainError;
-use crate::onchain::mock_store::MockStore;
 
 pub struct OnchainClient {
     rpc: Box<TonicRpcClient>,
@@ -20,7 +20,7 @@ pub struct OnchainClient {
 
 impl OnchainClient {
     pub fn new(rpc_endpoint: String, timeout_ms: u64) -> Self {
-        let endpoint = Endpoint::try_from(rpc_endpoint).unwrap();
+        let endpoint = Endpoint::try_from(rpc_endpoint.as_str()).unwrap();
         OnchainClient {
             rpc: Box::new(TonicRpcClient::new(endpoint.clone(), timeout_ms.clone())),
             endpoint,
@@ -63,9 +63,8 @@ impl OnchainClient {
 
 
         let tx = {
-            let mock_store: MockStore = MockStore::new(self, auth);
-
-            let store: Arc<MockStore> = Arc::new(mock_store);
+            let store = SqliteStore::new("./DB.sql".into()).await?;
+            let store: Arc<_> = Arc::new(store);
 
             let rpc = Box::new(TonicRpcClient::new(
                 self.endpoint.clone(),

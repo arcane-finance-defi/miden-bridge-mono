@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 eyre = "0.6.12"
-miden-client = {version = "0.7.2", features = ["tokio", "concurrent", "tonic"]}
+miden-client = {version = "0.7.2", features = ["concurrent", "sqlite", "tokio", "tonic"]}
 miden-crypto = "0.13.3"
 miden-objects = "0.7.2"
 rocket = { version = "0.5.1", features = ["json"] }

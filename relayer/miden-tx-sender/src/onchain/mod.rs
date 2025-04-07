@@ -3,8 +3,6 @@ mod client;
 mod errors;
 mod responses;
 mod mint_note;
-mod mock_store;
-
 pub use client::OnchainClient;
 pub use responses::*;
 pub use deploy_token::deploy;

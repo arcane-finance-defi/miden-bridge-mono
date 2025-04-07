@@ -1,0 +1,3 @@
+[default]
+rpc_url = "https://rpc.testnet.miden.io"
+rpc_timeout_ms = 10000

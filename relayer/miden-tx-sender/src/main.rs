@@ -20,7 +20,7 @@ struct State {
 }
 
 #[launch]
-fn rocket() -> _ {
+async fn rocket() -> _ {
     dotenv().ok();
 
     let rocket = rocket::build();
@@ -28,10 +28,12 @@ fn rocket() -> _ {
     let figment = rocket.figment();
     let config: Config = figment.extract().expect("config");
 
-    let onchain: OnchainClient = OnchainClient::new(
+    let mut onchain: OnchainClient = OnchainClient::new(
         config.rpc_url().clone(),
         config.rpc_timeout_ms().clone()
     );
 
+    let block = onchain.get_anchor_block().await.unwrap().block_num();
+    println!("{block}");
     rocket.manage(State {client: Arc::new(onchain)}).mount("/", routes![index])
 }
