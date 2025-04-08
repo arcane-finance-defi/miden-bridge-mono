@@ -36,7 +36,7 @@ pub async fn mint_asset(
             recipient.into(),
             assets
         ))
-    ]).map_err(OnchainError::from)?.build();
+    ]).build()?;
 
     let delta = client.execute_tx(
         tx_request,

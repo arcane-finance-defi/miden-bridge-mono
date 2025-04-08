@@ -13,7 +13,7 @@ use rand::Rng;
 use crate::onchain::errors::OnchainError;
 
 pub struct OnchainClient {
-    rpc: Box<TonicRpcClient>,
+    pub rpc: Arc<dyn NodeRpcClient + Send + Sync + 'static>,
     endpoint: Endpoint,
     timeout_ms: u64
 }
@@ -22,7 +22,7 @@ impl OnchainClient {
     pub fn new(rpc_endpoint: String, timeout_ms: u64) -> Self {
         let endpoint = Endpoint::try_from(rpc_endpoint.as_str()).unwrap();
         OnchainClient {
-            rpc: Box::new(TonicRpcClient::new(endpoint.clone(), timeout_ms.clone())),
+            rpc: Arc::new(TonicRpcClient::new(&endpoint, timeout_ms.clone())),
             endpoint,
             timeout_ms
         }
@@ -57,7 +57,7 @@ impl OnchainClient {
     ) -> Result<AccountDelta, OnchainError> {
 
         let mut rng = rand::thread_rng();
-        let coin_seed: [u64; 4] = rng.gen();
+        let coin_seed: [u64; 4] = rng.r#gen();
 
         let rng = RpoRandomCoin::new(coin_seed.map(Felt::new));
 
@@ -66,14 +66,14 @@ impl OnchainClient {
             let store = SqliteStore::new("./DB.sql".into()).await?;
             let store: Arc<_> = Arc::new(store);
 
-            let rpc = Box::new(TonicRpcClient::new(
-                self.endpoint.clone(),
+            let rpc = Arc::new(TonicRpcClient::new(
+                &self.endpoint,
                 self.timeout_ms.clone()
             ));
 
             let mut execution_client = Client::new(
                 rpc,
-                rng,
+                Box::new(rng),
                 store.clone(),
                 Arc::new(StoreAuthenticator::new_with_rng(store.clone(), rng)),
                 false
@@ -89,7 +89,7 @@ impl OnchainClient {
 
 
         let mut rpc = Box::new(TonicRpcClient::new(
-            self.endpoint.clone(),
+            &self.endpoint,
             self.timeout_ms.clone()
         ));
 
