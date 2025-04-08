@@ -1,0 +1,132 @@
+openapi: 3.0.4
+info:
+  title: Miden bridge rust module
+  description: Api spec for the rust module
+  version: 1.0.0
+tags:
+  - name: user
+    description: Operations about user
+  
+paths:
+  /mint:
+    post:
+      summary: Issue miden note with provided RECIPIENT
+      description: Issue miden note with provided RECIPIENT
+      operationId: mintNote
+      requestBody:
+        description: Mint new note onchain
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MintArgs'
+        required: true
+      responses:
+        200:
+          description: Successful created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MintedNote'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /poll:
+    get:
+      summary: |
+        Poll the miden light client for the incoming notes with the bridge events
+      description: |
+        Poll the miden light client for the incoming notes with the bridge events
+      operationId: pollNotes
+      parameters:
+        - name: fromHeight
+          in: query
+          description: The start height for the poll
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Results of polling
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolledEvents'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  
+      
+components:
+  schemas:
+    Asset:
+      type: object
+      properties:
+        originNetwork:
+          type: integer
+        originAddress:
+          type: string
+        assetSymbol:
+          type: string
+        decimals:
+          type: integer
+    MintArgs:
+      type: object
+      properties:
+        asset:
+          $ref: '#/components/schemas/Asset'
+        amount:
+          type: integer
+        recipient:
+          type: string
+    MintedNote:
+      type: object
+      properties:
+        noteId:
+          type: string
+        faucetId:
+          type: string
+        transactionId:
+          type: string
+    PolledEvents:
+      type: object
+      properties:
+        chainTip:
+          type: integer
+          description: The last synced block from the current poll response
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExitEvent'
+    ExitEvent:
+      type: object
+      properties:
+        noteId:
+          type: string
+        asset:
+          $ref: '#/components/schemas/Asset'
+        receiver:
+          type: string
+        destinationChain:
+          type: integer
+        amount:
+          type: integer
+        callAddress:
+          type: string
+        callData:
+          type: string
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
