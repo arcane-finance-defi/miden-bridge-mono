@@ -3,7 +3,6 @@ use miden_client::block::BlockHeader;
 use miden_client::Client;
 use miden_client::note::BlockNumber;
 use miden_client::rpc::{Endpoint, NodeRpcClient, TonicRpcClient};
-use miden_client::store::{StoreAuthenticator};
 use miden_client::store::sqlite_store::SqliteStore;
 use miden_client::transaction::{LocalTransactionProver, TransactionProver, TransactionRequest};
 use miden_crypto::rand::RpoRandomCoin;
@@ -53,7 +52,6 @@ impl OnchainClient {
         &mut self,
         tx: TransactionRequest,
         faucet_id: AccountId,
-        auth: AuthSecretKey
     ) -> Result<AccountDelta, OnchainError> {
 
         let mut rng = rand::thread_rng();
@@ -75,7 +73,7 @@ impl OnchainClient {
                 rpc,
                 Box::new(rng),
                 store.clone(),
-                Arc::new(StoreAuthenticator::new_with_rng(store.clone(), rng)),
+                Arc::new(()),
                 false
             );
 

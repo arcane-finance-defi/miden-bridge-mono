@@ -41,7 +41,6 @@ pub async fn mint_asset(
     let delta = client.execute_tx(
         tx_request,
         created_token_account.account().id(),
-        created_token_account.auth_secret_key()
     ).await?;
 
     created_token_account.account().apply_delta(&delta);

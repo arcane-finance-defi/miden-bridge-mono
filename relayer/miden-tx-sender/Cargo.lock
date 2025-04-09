@@ -1379,6 +1379,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "miden-bridge"
+version = "0.1.0"
+dependencies = [
+ "miden-assembly",
+ "miden-lib",
+ "miden-objects",
+ "miden-stdlib",
+ "miden-tx",
+ "regex",
+ "walkdir",
+]
+
+[[package]]
 name = "miden-client"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1624,10 +1637,11 @@ version = "0.1.0"
 dependencies = [
  "dotenv",
  "eyre",
+ "miden-bridge",
  "miden-client",
  "miden-crypto",
  "miden-objects",
- "rand 0.8.5",
+ "rand 0.9.0",
  "rocket",
  "serde",
  "thiserror 2.0.12",
