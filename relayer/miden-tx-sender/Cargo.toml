@@ -12,6 +12,7 @@ miden-objects = "0.8.1"
 rocket = { version = "0.5.1", features = ["json"] }
 thiserror = "2.0.12"
 serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0"
 rand = "0.9"
 dotenv = "0.15.0"
 tokio = "1.44.1"

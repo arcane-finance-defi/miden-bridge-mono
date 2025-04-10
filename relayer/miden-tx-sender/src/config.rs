@@ -4,7 +4,7 @@ use rocket::serde::Deserialize;
 #[serde(crate = "rocket::serde")]
 pub struct Config {
     rpc_url: String,
-    rpc_timeout_ms: u64
+    rpc_timeout_ms: u64,
 }
 
 impl Config {
