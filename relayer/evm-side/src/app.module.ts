@@ -8,6 +8,7 @@ import { format, transports } from 'winston';
 import { EvmModule } from './modules/evm/evm.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RepositoriesModule } from './repositories/repositories.module';
+import { MidenModule } from './modules/miden/miden.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { RepositoriesModule } from './repositories/repositories.module';
     }),
     ScheduleModule.forRoot(),
     RepositoriesModule,
+    MidenModule,
   ],
 })
 export class AppModule {}

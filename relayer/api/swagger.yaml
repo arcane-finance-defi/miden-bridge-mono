@@ -3,9 +3,6 @@ info:
   title: Miden bridge rust module
   description: Api spec for the rust module
   version: 1.0.0
-tags:
-  - name: user
-    description: Operations about user
   
 paths:
   /mint:
@@ -86,6 +83,10 @@ components:
           type: string
     MintedNote:
       type: object
+      required:
+        - noteId
+        - faucetId
+        - transactionId
       properties:
         noteId:
           type: string

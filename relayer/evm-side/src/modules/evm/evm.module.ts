@@ -12,6 +12,7 @@ import { RpcService } from './services/rpc.service';
 import { RepositoriesModule } from 'src/repositories/repositories.module';
 import { ExitRepository } from 'src/repositories/services/exit.repository';
 import { ScansRepository } from 'src/repositories/services/scans.repository';
+import { MidenModule } from '../miden';
 
 function generateKey(chainId): string {
   return `evm-poller-${chainId}`;
@@ -39,7 +40,7 @@ function generateAsyncProvider(index): FactoryProvider<PollerService> {
 }
 
 @Module({
-  imports: [MainConfigModule, RepositoriesModule],
+  imports: [MainConfigModule, RepositoriesModule, MidenModule],
   providers: [RpcService],
 })
 export class EvmModule extends ConfigurableModuleClass {
