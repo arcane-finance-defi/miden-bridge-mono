@@ -1,20 +1,20 @@
-use crate::MintNoteError;
 use crate::onchain::deploy_token::insert_new_fungible_faucet;
 use crate::onchain::errors::OnchainError;
-use crate::onchain::mint_note::{Asset, MintedNote, mint_fungible_asset};
-use miden_client::Client;
+use crate::onchain::mint_note::{mint_fungible_asset, Asset, MintedNote};
 use miden_client::block::BlockHeader;
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::note::BlockNumber;
 use miden_client::rpc::{Endpoint, NodeRpcClient, TonicRpcClient};
-use miden_client::store::NoteExportType;
 use miden_client::store::sqlite_store::SqliteStore;
+use miden_client::store::NoteExportType;
 use miden_client::transaction::{
     LocalTransactionProver, TransactionProver, TransactionRequest, TransactionResult,
 };
+use miden_client::Client;
 use miden_crypto::rand::RpoRandomCoin;
-use miden_objects::Felt;
 use miden_objects::account::{AccountDelta, AccountId, AccountStorageMode};
+use miden_objects::Felt;
+use rand::rngs::StdRng;
 use rand::Rng;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -107,15 +107,9 @@ pub async fn execute_tx(
     tx: TransactionRequest,
     faucet_id: AccountId,
 ) -> Result<TransactionResult, OnchainError> {
-    let tx = execution_client
-        .new_transaction(faucet_id, tx)
-        .await
-        .map_err(OnchainError::from)?;
+    let tx = execution_client.new_transaction(faucet_id, tx).await?;
 
-    execution_client
-        .submit_transaction(tx.clone())
-        .await
-        .map_err(OnchainError::from)?;
+    execution_client.submit_transaction(tx.clone()).await?;
 
     Ok(tx)
 }
@@ -127,8 +121,50 @@ pub enum ClientCommand {
         recipient: AccountId,
         amount: u64,
         asset: Asset,
-        tx: OneshotSender<Result<MintedNote, MintNoteError>>,
+        tx: OneshotSender<Result<MintedNote, OnchainError>>,
     },
+}
+
+async fn mint_note(
+    execution_client: &mut Client,
+    keystore: &FilesystemKeyStore<StdRng>,
+    faucet_id: AccountId,
+    recipient: AccountId,
+    amount: u64,
+    asset: Asset,
+) -> Result<MintedNote, OnchainError> {
+    let now = Instant::now();
+    execution_client.sync_state().await?;
+
+    let faucet_account = execution_client.get_account(faucet_id).await?;
+    if faucet_account.is_none() {
+        insert_new_fungible_faucet(
+            execution_client,
+            AccountStorageMode::Private,
+            &keystore,
+            &asset.asset_symbol,
+            asset.decimals,
+        )
+        .await?;
+    }
+
+    let mint_result = mint_fungible_asset(execution_client, faucet_id, recipient, amount).await?;
+    let note_id = mint_result.created_notes().get_note(0).id();
+    let output_note = execution_client.get_output_note(note_id).await?.unwrap();
+
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
+
+    let note_file = output_note.into_note_file(&NoteExportType::NoteDetails).unwrap();
+    let path = format!("./minted_note_wrapper_{}_{}.mno", timestamp.as_secs(), note_id.to_hex());
+    note_file.write(path).unwrap();
+
+    println!("Minting took {}", now.elapsed().as_millis());
+
+    Ok(MintedNote {
+        note_id: note_id.to_hex(),
+        faucet_id: faucet_id.to_hex(),
+        transaction_id: mint_result.executed_transaction().id().to_hex(),
+    })
 }
 
 pub fn client_process_loop(
@@ -158,50 +194,16 @@ pub fn client_process_loop(
                 sender.send(tip).unwrap();
             },
             ClientCommand::MintNote { faucet_id, recipient, amount, asset, tx } => {
-                let now = Instant::now();
-                runtime.block_on(execution_client.sync_state()).unwrap();
+                let result = runtime.block_on(mint_note(
+                    &mut execution_client,
+                    &keystore,
+                    faucet_id,
+                    recipient,
+                    amount,
+                    asset,
+                ));
 
-                let faucet_account =
-                    runtime.block_on(execution_client.get_account(faucet_id)).unwrap();
-                if faucet_account.is_none() {
-                    runtime
-                        .block_on(insert_new_fungible_faucet(
-                            &mut execution_client,
-                            AccountStorageMode::Private,
-                            &keystore,
-                            &asset.asset_symbol,
-                            asset.decimals,
-                        ))
-                        .unwrap();
-                }
-
-                let mint_result = runtime
-                    .block_on(mint_fungible_asset(
-                        &mut execution_client,
-                        faucet_id,
-                        recipient,
-                        amount,
-                    ))
-                    .unwrap();
-                let note_id = mint_result.created_notes().get_note(0).id();
-                let output_note =
-                    runtime.block_on(execution_client.get_output_note(note_id)).unwrap().unwrap();
-
-                let timestamp =
-                    SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
-
-                let note_file = output_note.into_note_file(&NoteExportType::NoteDetails).unwrap();
-                let path = format!("./minted_note_wrapper_{}.mno", timestamp.as_secs());
-                note_file.write(path).unwrap();
-
-                println!("Minting took {}", now.elapsed().as_millis());
-
-                tx.send(Ok(MintedNote {
-                    note_id: note_id.to_hex(),
-                    faucet_id: faucet_id.to_hex(),
-                    transaction_id: mint_result.executed_transaction().id().to_hex(),
-                }))
-                .unwrap();
+                tx.send(result).unwrap();
             },
         }
     }

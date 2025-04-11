@@ -41,7 +41,6 @@ use rocket::http::Status;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::sync::oneshot::Sender as OneshotSender;
 
 /// TODO
 fn faucet_id_by_asset(asset: &Asset) -> AccountId {

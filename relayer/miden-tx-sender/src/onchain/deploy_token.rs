@@ -1,17 +1,17 @@
-use crate::onchain::CreatedTokenAccount;
 use crate::onchain::client::OnchainClient;
 use crate::onchain::errors::OnchainError;
+use crate::onchain::CreatedTokenAccount;
 use miden_bridge::accounts::token_wrapper::TokenWrapperAccount;
 use miden_client::account::component::{BasicFungibleFaucet, RpoFalcon512};
 use miden_client::account::{AccountBuilder, AccountStorageMode, AccountType};
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::{Client, ClientError};
-use miden_crypto::{Word, dsa::rpo_falcon512::SecretKey, hash::rpo::Rpo256};
-use miden_objects::Felt;
+use miden_crypto::{dsa::rpo_falcon512::SecretKey, hash::rpo::Rpo256, Word};
 use miden_objects::account::{Account, AuthSecretKey};
 use miden_objects::asset::TokenSymbol;
+use miden_objects::Felt;
 use rand::prelude::StdRng;
-use rand::{RngCore, rng};
+use rand::{rng, RngCore};
 
 const MAX_SUPPLY: Felt = Felt::new(u64::MAX);
 
@@ -34,7 +34,7 @@ pub async fn insert_new_fungible_faucet(
 
     let symbol = TokenSymbol::new(symbol).unwrap();
 
-    let anchor_block = client.get_latest_epoch_block().await.unwrap();
+    let anchor_block = client.get_latest_epoch_block().await?;
 
     let (account, seed) = AccountBuilder::new(init_seed)
         .anchor((&anchor_block).try_into().unwrap())
@@ -43,8 +43,7 @@ pub async fn insert_new_fungible_faucet(
         .with_component(RpoFalcon512::new(pub_key))
         .with_component(TokenWrapperAccount::new())
         .with_component(BasicFungibleFaucet::new(symbol, decimals, MAX_SUPPLY).unwrap())
-        .build()
-        .unwrap();
+        .build()?;
 
     client.add_account(&account, Some(seed), false).await?;
     Ok((account, seed))
