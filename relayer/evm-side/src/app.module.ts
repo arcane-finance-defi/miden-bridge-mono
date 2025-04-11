@@ -9,6 +9,7 @@ import { EvmModule } from './modules/evm/evm.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RepositoriesModule } from './repositories/repositories.module';
 import { MidenModule } from './modules/miden/miden.module';
+import { RelayerModule } from './modules/relayer/relayer.module';
 
 @Module({
   imports: [
@@ -42,9 +43,11 @@ import { MidenModule } from './modules/miden/miden.module';
         };
       },
     }),
+    RelayerModule,
     ScheduleModule.forRoot(),
     RepositoriesModule,
     MidenModule,
+    RelayerModule,
   ],
 })
 export class AppModule {}

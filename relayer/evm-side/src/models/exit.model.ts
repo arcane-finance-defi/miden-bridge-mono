@@ -72,6 +72,21 @@ export class ExitModel {
   @Column({ name: 'asset_metadata_decimals', type: 'int', nullable: true })
   assetDecimals!: number;
 
+  @Column({
+    name: 'calldata',
+    nullable: true,
+    type: 'bytea',
+    transformer: {
+      from(value: Buffer) {
+        return '0x' + value.toString('hex');
+      },
+      to(value: string) {
+        return Buffer.from(value.replace('0x', ''), 'hex');
+      },
+    },
+  })
+  calldata?: string;
+
   @Column({ name: 'transaction_id', type: 'text' })
   txId!: string;
 }

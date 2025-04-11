@@ -93,6 +93,7 @@ export class PollerService {
       },
       sender: asset.originAddress,
       receiver: message.metadata.callAddress,
+      calldata: message.metadata.callData,
       assetName: asset?.metadata?.name,
       assetSymbol: asset?.metadata?.symbol,
       assetDecimals: asset?.metadata?.deimals,
