@@ -1,6 +1,7 @@
 use crate::onchain::deploy_token::insert_new_fungible_faucet;
 use crate::onchain::errors::OnchainError;
 use crate::onchain::mint_note::{mint_fungible_asset, Asset, MintedNote};
+use crate::store::Store;
 use miden_client::block::BlockHeader;
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::note::BlockNumber;
@@ -117,7 +118,6 @@ pub async fn execute_tx(
 pub enum ClientCommand {
     GetChainTip(OneshotSender<BlockNumber>),
     MintNote {
-        faucet_id: AccountId,
         recipient: AccountId,
         amount: u64,
         asset: Asset,
@@ -128,7 +128,7 @@ pub enum ClientCommand {
 async fn mint_note(
     execution_client: &mut Client,
     keystore: &FilesystemKeyStore<StdRng>,
-    faucet_id: AccountId,
+    assets_store: &Store,
     recipient: AccountId,
     amount: u64,
     asset: Asset,
@@ -136,17 +136,27 @@ async fn mint_note(
     let now = Instant::now();
     execution_client.sync_state().await?;
 
-    let faucet_account = execution_client.get_account(faucet_id).await?;
-    if faucet_account.is_none() {
-        insert_new_fungible_faucet(
-            execution_client,
-            AccountStorageMode::Private,
-            &keystore,
-            &asset.asset_symbol,
-            asset.decimals,
-        )
-        .await?;
-    }
+    let faucet_id =
+        match assets_store.get_faucet_id(asset.origin_network, &asset.origin_address).await? {
+            Some(id) => id,
+            None => {
+                let (account, _) = insert_new_fungible_faucet(
+                    execution_client,
+                    AccountStorageMode::Private,
+                    &keystore,
+                    &asset.asset_symbol,
+                    asset.decimals,
+                )
+                .await?;
+
+                let account_id = account.id();
+                assets_store
+                    .add_faucet_id(asset.origin_network, &asset.origin_address, &account_id)
+                    .await?;
+
+                account_id
+            },
+        };
 
     let mint_result = mint_fungible_asset(execution_client, faucet_id, recipient, amount).await?;
     let note_id = mint_result.created_notes().get_note(0).id();
@@ -172,7 +182,11 @@ pub fn client_process_loop(
     mut receiver: Receiver<ClientCommand>,
     runtime: Runtime,
 ) {
-    let store = Arc::new(runtime.block_on(SqliteStore::new("./DB.sql".into())).unwrap());
+    let miden_client_store =
+        Arc::new(runtime.block_on(SqliteStore::new("./miden_store.sql".into())).unwrap());
+    let assets_store = runtime
+        .block_on(Store::new("./assets_store.sql".into()))
+        .expect("Assets store to be initialized");
 
     let mut rng = rand::rng();
     let coin_seed: [u64; 4] = rng.random();
@@ -181,7 +195,7 @@ pub fn client_process_loop(
 
     let rng = RpoRandomCoin::new(coin_seed.map(Felt::new));
     let mut execution_client =
-        Client::new(client.rpc.clone(), Box::new(rng), store.clone(), keystore.clone(), false);
+        Client::new(client.rpc.clone(), Box::new(rng), miden_client_store, keystore.clone(), false);
 
     runtime.block_on(execution_client.sync_state()).unwrap();
 
@@ -193,11 +207,11 @@ pub fn client_process_loop(
                 let tip = runtime.block_on(execution_client.get_sync_height()).unwrap();
                 sender.send(tip).unwrap();
             },
-            ClientCommand::MintNote { faucet_id, recipient, amount, asset, tx } => {
+            ClientCommand::MintNote { recipient, amount, asset, tx } => {
                 let result = runtime.block_on(mint_note(
                     &mut execution_client,
                     &keystore,
-                    faucet_id,
+                    &assets_store,
                     recipient,
                     amount,
                     asset,

@@ -3,11 +3,10 @@ extern crate dotenv;
 extern crate rocket;
 mod config;
 mod onchain;
+mod store;
 
 use rocket::State as RocketState;
-use std::fs::File;
 use std::sync::Arc;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use crate::config::Config;
 use crate::onchain::client::{client_process_loop, ClientCommand};
@@ -42,11 +41,6 @@ use rocket::serde::{json::Json, Deserialize, Serialize};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-/// TODO
-fn faucet_id_by_asset(asset: &Asset) -> AccountId {
-    AccountId::from_hex("0x774788a75a4698a0000260ad7554a0").unwrap()
-}
-
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct ErrorResponse {
@@ -64,12 +58,9 @@ async fn mint_note(
             Json(ErrorResponse { error: e.to_string() }),
         )
     })?;
-    let faucet_id = faucet_id_by_asset(&mint_args.asset);
-
     let (tx, rx) = tokio::sync::oneshot::channel();
 
     let command = ClientCommand::MintNote {
-        faucet_id,
         recipient,
         amount: mint_args.amount,
         asset: mint_args.into_inner().asset,

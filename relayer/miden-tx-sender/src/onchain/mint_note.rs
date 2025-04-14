@@ -1,11 +1,10 @@
-use crate::onchain::CreatedTokenAccount;
 use crate::onchain::client::execute_tx;
 use crate::onchain::errors::OnchainError;
 use miden_client::Client;
 use miden_client::transaction::{TransactionRequestBuilder, TransactionResult};
 use miden_crypto::Word;
 use miden_objects::Felt;
-use miden_objects::account::{Account, AccountId};
+use miden_objects::account::AccountId;
 use miden_objects::asset::{Asset as MidenAsset, FungibleAsset};
 use miden_objects::note::{
     NoteAssets, NoteExecutionHint, NoteMetadata, NoteTag, NoteType, PartialNote,
