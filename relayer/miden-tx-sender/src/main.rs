@@ -52,12 +52,8 @@ async fn mint_note(
     mint_args: Json<MintArgs>,
     state: &RocketState<State>,
 ) -> Result<Json<MintedNote>, (Status, Json<ErrorResponse>)> {
-    let recipient = AccountId::from_hex(&mint_args.recipient).map_err(|e| {
-        (
-            Status::from_code(400).expect("400 is valid status"),
-            Json(ErrorResponse { error: e.to_string() }),
-        )
-    })?;
+    let recipient = AccountId::from_hex(&mint_args.recipient)
+        .map_err(|e| (Status::BadRequest, Json(ErrorResponse { error: e.to_string() })))?;
     let (tx, rx) = tokio::sync::oneshot::channel();
 
     let command = ClientCommand::MintNote {
@@ -67,20 +63,28 @@ async fn mint_note(
         tx,
     };
 
-    state.sender.try_send(command).unwrap();
+    if let Err(e) = state.sender.try_send(command) {
+        return Err((Status::InternalServerError, Json(ErrorResponse { error: e.to_string() })));
+    }
 
-    let mint_result = rx.await.unwrap().unwrap();
-
-    Ok(Json(mint_result))
+    match rx.await {
+        Ok(Ok(mint_result)) => Ok(Json(mint_result)),
+        Ok(Err(e)) => {
+            Err((Status::InternalServerError, Json(ErrorResponse { error: e.to_string() })))
+        },
+        Err(e) => Err((Status::InternalServerError, Json(ErrorResponse { error: e.to_string() }))),
+    }
 }
 
 #[get("/chain-tip")]
-async fn chain_tip(state: &RocketState<State>) -> String {
+async fn chain_tip(state: &RocketState<State>) -> Result<String, Status> {
     let (tx, rx) = tokio::sync::oneshot::channel();
     state.sender.try_send(ClientCommand::GetChainTip(tx)).unwrap();
 
-    let block_number = rx.await.unwrap();
-    block_number.to_string()
+    match rx.await {
+        Ok(Ok(block_number)) => Ok(block_number.to_string()),
+        Ok(Err(_)) | Err(_) => Err(Status::InternalServerError),
+    }
 }
 
 struct State {

@@ -116,13 +116,18 @@ pub async fn execute_tx(
 }
 
 pub enum ClientCommand {
-    GetChainTip(OneshotSender<BlockNumber>),
+    GetChainTip(OneshotSender<Result<BlockNumber, OnchainError>>),
     MintNote {
         recipient: AccountId,
         amount: u64,
         asset: Asset,
         tx: OneshotSender<Result<MintedNote, OnchainError>>,
     },
+}
+
+async fn get_sync_height(execution_client: &mut Client) -> Result<BlockNumber, OnchainError> {
+    execution_client.sync_state().await?;
+    execution_client.get_sync_height().await.map_err(OnchainError::from)
 }
 
 async fn mint_note(
@@ -204,8 +209,8 @@ pub fn client_process_loop(
 
         match command {
             ClientCommand::GetChainTip(sender) => {
-                let tip = runtime.block_on(execution_client.get_sync_height()).unwrap();
-                sender.send(tip).unwrap();
+                let result = runtime.block_on(get_sync_height(&mut execution_client));
+                sender.send(result).unwrap();
             },
             ClientCommand::MintNote { recipient, amount, asset, tx } => {
                 let result = runtime.block_on(mint_note(
