@@ -605,6 +605,7 @@ dependencies = [
  "miden-tx",
  "rand_chacha 0.9.0",
  "regex",
+ "thiserror 2.0.12",
  "walkdir",
  "winter-maybe-async",
 ]
