@@ -1,5 +1,6 @@
 use miden_client::ClientError;
 use miden_client::rpc::RpcError;
+use miden_client::store::StoreError;
 use miden_client::transaction::{TransactionProverError, TransactionRequestError};
 use miden_objects::{AccountError, AssetError, NoteError};
 use thiserror::Error;
@@ -19,5 +20,7 @@ pub enum OnchainError {
     #[error(transparent)]
     TransactionProverError(#[from] TransactionProverError),
     #[error(transparent)]
-    TransactionBuilderError(#[from] TransactionRequestError)
+    TransactionBuilderError(#[from] TransactionRequestError),
+    #[error(transparent)]
+    StoreError(#[from] StoreError),
 }
