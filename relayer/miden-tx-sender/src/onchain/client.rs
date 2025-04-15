@@ -2,6 +2,7 @@ use crate::onchain::deploy_token::insert_new_fungible_faucet;
 use crate::onchain::errors::OnchainError;
 use crate::onchain::mint_note::{mint_fungible_asset, Asset, MintedNote};
 use crate::store::Store;
+use miden_bridge::notes::bridge::croschain;
 use miden_client::block::BlockHeader;
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::note::BlockNumber;
@@ -9,11 +10,18 @@ use miden_client::rpc::{Endpoint, NodeRpcClient, TonicRpcClient};
 use miden_client::store::sqlite_store::SqliteStore;
 use miden_client::store::NoteExportType;
 use miden_client::transaction::{
-    LocalTransactionProver, TransactionProver, TransactionRequest, TransactionResult,
+    LocalTransactionProver, TransactionProver, TransactionRequest, TransactionRequestBuilder,
+    TransactionResult,
 };
 use miden_client::Client;
-use miden_crypto::rand::RpoRandomCoin;
+use miden_crypto::rand::{FeltRng, RpoRandomCoin};
+use miden_crypto::{FieldElement, Word};
 use miden_objects::account::{AccountDelta, AccountId, AccountStorageMode};
+use miden_objects::asset::FungibleAsset;
+use miden_objects::note::{
+    Note, NoteAssets, NoteExecutionHint, NoteExecutionMode, NoteFile, NoteInputs, NoteMetadata,
+    NoteRecipient, NoteTag, NoteType,
+};
 use miden_objects::Felt;
 use rand::rngs::StdRng;
 use rand::Rng;
@@ -68,8 +76,8 @@ impl OnchainClient {
         tx: TransactionRequest,
         faucet_id: AccountId,
     ) -> Result<AccountDelta, OnchainError> {
-        let mut rng = rand::thread_rng();
-        let coin_seed: [u64; 4] = rng.r#gen();
+        let mut rng = rand::rng();
+        let coin_seed: [u64; 4] = rng.random();
 
         let rng = RpoRandomCoin::new(coin_seed.map(Felt::new));
 
@@ -106,9 +114,9 @@ impl OnchainClient {
 pub async fn execute_tx(
     execution_client: &mut Client,
     tx: TransactionRequest,
-    faucet_id: AccountId,
+    account_id: AccountId,
 ) -> Result<TransactionResult, OnchainError> {
-    let tx = execution_client.new_transaction(faucet_id, tx).await?;
+    let tx = execution_client.new_transaction(account_id, tx).await?;
 
     execution_client.submit_transaction(tx.clone()).await?;
 
@@ -182,6 +190,66 @@ async fn mint_note(
     })
 }
 
+async fn burn_asset(
+    execution_client: &mut Client,
+    faucet_id: AccountId,
+    amount: u64,
+    sender: AccountId,
+) -> Result<(), OnchainError> {
+    let asset = FungibleAsset::new(faucet_id, amount)?;
+    let call_address = [Felt::ZERO, Felt::ZERO, Felt::ZERO];
+
+    let chain_id: u64 = 123;
+
+    let mut rng = RpoRandomCoin::new(Word::from([
+        Felt::new(456),
+        Felt::new(456),
+        Felt::new(456),
+        Felt::new(456),
+    ]));
+
+    let output_serial_num = rng.draw_word();
+
+    let receiver_address = [rng.draw_element(), rng.draw_element(), rng.draw_element()];
+
+    let note_inputs = NoteInputs::new(vec![
+        output_serial_num[0],
+        output_serial_num[1],
+        output_serial_num[2],
+        output_serial_num[3],
+        Felt::new(chain_id),
+        receiver_address[0],
+        receiver_address[1],
+        receiver_address[2],
+        Felt::ZERO,
+        call_address[0],
+        call_address[1],
+        call_address[2],
+    ])?;
+
+    let note = Note::new(
+        NoteAssets::new(vec![asset.into()])?,
+        NoteMetadata::new(
+            sender,
+            NoteType::Public,
+            NoteTag::from_account_id(faucet_id, NoteExecutionMode::Local)?,
+            NoteExecutionHint::Always,
+            Felt::ZERO,
+        )?,
+        NoteRecipient::new(
+            [Felt::new(1), Felt::ZERO, Felt::ZERO, Felt::ZERO],
+            croschain(),
+            note_inputs,
+        ),
+    );
+
+    let tx_request = TransactionRequestBuilder::new()
+        .with_unauthenticated_input_notes([(note, None)])
+        .build()?;
+    execute_tx(execution_client, tx_request, faucet_id).await?;
+    Ok(())
+}
+
 pub fn client_process_loop(
     mut client: OnchainClient,
     mut receiver: Receiver<ClientCommand>,
@@ -203,6 +271,40 @@ pub fn client_process_loop(
         Client::new(client.rpc.clone(), Box::new(rng), miden_client_store, keystore.clone(), false);
 
     runtime.block_on(execution_client.sync_state()).unwrap();
+
+    let account_id = AccountId::from_hex("0x809f07aa1c5492800003c988372cbd").unwrap();
+    let new_note_path = "./minted_note_wrapper_1744713607_0x35f59954a63c43722899c31f7510ba5b639e9fbda6716724bd07d43ed492e002.mno";
+    let note_file = NoteFile::read(&new_note_path).unwrap();
+    runtime.block_on(execution_client.import_note(note_file)).unwrap();
+
+    runtime.block_on(execution_client.sync_state()).unwrap();
+
+    let consumable_notes = runtime
+        .block_on(execution_client.get_consumable_notes(Some(account_id)))
+        .unwrap();
+    println!("Consumable Notes: {:?}", consumable_notes);
+
+    if !consumable_notes.is_empty() {
+        let transaction_request = TransactionRequestBuilder::new()
+            .with_authenticated_input_notes([(consumable_notes[0].0.id(), None)])
+            .build()
+            .unwrap();
+        let result = runtime
+            .block_on(execute_tx(&mut execution_client, transaction_request, account_id))
+            .unwrap();
+        println!("Transaction execution result: {:?}", result);
+    }
+
+    let account = runtime.block_on(execution_client.get_account(account_id)).unwrap().unwrap();
+    let assets = account.account().vault().assets();
+    for asset in assets {
+        println!("Found asset: {:?}", asset);
+        let fungible = asset.unwrap_fungible();
+        let faucet_id = fungible.faucet_id();
+        let burn = runtime
+            .block_on(burn_asset(&mut execution_client, faucet_id, 10, account_id))
+            .unwrap();
+    }
 
     loop {
         let command = runtime.block_on(receiver.recv()).unwrap();
