@@ -33,7 +33,7 @@ use miden_objects::account::{
 use miden_objects::asset::{FungibleAsset, TokenSymbol};
 use miden_objects::block::BlockNumber;
 use miden_objects::note::{Note, NoteFile, NoteType};
-use miden_objects::utils::ReadAdapter;
+use miden_objects::utils::{ReadAdapter, parse_hex_string_as_word};
 use rand::rngs::{StdRng, ThreadRng};
 use rand::{rng, Rng, RngCore};
 use rocket::http::Status;
@@ -52,7 +52,7 @@ async fn mint_note(
     mint_args: Json<MintArgs>,
     state: &RocketState<State>,
 ) -> Result<Json<MintedNote>, (Status, Json<ErrorResponse>)> {
-    let recipient = AccountId::from_hex(&mint_args.recipient)
+    let recipient = parse_hex_string_as_word(&mint_args.recipient)
         .map_err(|e| (Status::BadRequest, Json(ErrorResponse { error: e.to_string() })))?;
     let (tx, rx) = tokio::sync::oneshot::channel();
 

@@ -1388,6 +1388,7 @@ dependencies = [
  "miden-stdlib",
  "miden-tx",
  "regex",
+ "thiserror 2.0.12",
  "walkdir",
 ]
 
