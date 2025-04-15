@@ -8,6 +8,7 @@ export interface BridgeEvent {
   metadata?: any;
   depositCount: bigint;
   tx: string;
+  blockNumber: number;
 }
 
 export interface BridgeMessageMetadata {

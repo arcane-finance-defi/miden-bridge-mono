@@ -96,6 +96,9 @@ components:
           type: string
     PolledEvents:
       type: object
+      required:
+        - chainTip
+        - events
       properties:
         chainTip:
           type: integer
@@ -106,9 +109,18 @@ components:
             $ref: '#/components/schemas/ExitEvent'
     ExitEvent:
       type: object
+      required:
+        - noteId
+        - blockNumber
+        - asset
+        - receiver
+        - destinationChain
+        - amount
       properties:
         noteId:
           type: string
+        blockNumber:
+          type: integer
         asset:
           $ref: '#/components/schemas/Asset'
         receiver:

@@ -17,7 +17,7 @@ if (!url) {
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   url,
-  logging: true,
+  logging: false,
   entities: [
     join(__dirname, '../src/models/*.model.ts'),
     join(__dirname, '../src/models/*.model.js'),

@@ -35,6 +35,10 @@ export class MainConfigService {
     return process.env[key];
   }
 
+  getMidenChainConf<K extends `MIDEN_${string}`>(key: K): string {
+    return process.env[key];
+  }
+
   getEvmChainIds(): Array<bigint> {
     return this.evmChainIds;
   }

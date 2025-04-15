@@ -97,6 +97,7 @@ export class PollerService {
       assetName: asset?.metadata?.name,
       assetSymbol: asset?.metadata?.symbol,
       assetDecimals: asset?.metadata?.deimals,
+      blockNumber: asset.blockNumber,
     }));
 
     this.logger.log(`Found ${exits.length} exits from chain`);

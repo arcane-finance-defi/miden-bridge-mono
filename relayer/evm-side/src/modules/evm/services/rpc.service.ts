@@ -75,6 +75,7 @@ export class RpcService {
           return {
             decoded,
             tx: log.transactionHash,
+            blockNumber: log.blockNumber,
           };
         }
         return null;
@@ -82,7 +83,7 @@ export class RpcService {
       .filter(
         (result) => result !== null && result.decoded.name === 'BridgeEvent',
       )
-      .map<BridgeEvent>(({ decoded, tx }) => {
+      .map<BridgeEvent>(({ decoded, tx, blockNumber }) => {
         const leafType = Number.parseInt(decoded.args[0]) as 0 | 1;
         let metadata = null;
         try {
@@ -105,6 +106,7 @@ export class RpcService {
           metadata,
           depositCount: BigInt(decoded.args[7]),
           tx,
+          blockNumber,
         };
       });
 
