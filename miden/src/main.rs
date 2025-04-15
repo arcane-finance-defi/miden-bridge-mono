@@ -114,10 +114,20 @@ fn restore_note(
 
     println!("Reconstructed note id: {note_id}");
 
-    let note_text = NoteFile::from(NoteDetails::new(
+    let note_details = NoteDetails::new(
         note.assets().clone(),
         note.recipient().clone(),
-    ));
+    );
+
+    const BRIDGE_USECASE: u16 = 15593;
+
+    let note_text = NoteFile::NoteDetails {
+        details: note_details,
+        after_block_num: 0.into(),
+        tag: Some(NoteTag::for_local_use_case(BRIDGE_USECASE, 0)
+            .map_err(|e| CliError::BuildExportableNoteError(e))?
+        )
+    };
 
     let file_path = env::current_dir()
         .map_err(|_| CliError::InvalidSavePathError())?
