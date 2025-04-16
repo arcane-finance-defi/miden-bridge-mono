@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExitModel } from 'src/models/exit.model';
 import { FulfillModel } from 'src/models/fulfill.model';
-import { EntityManager, IsNull, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class ExitRepository {
@@ -46,5 +46,24 @@ export class ExitRepository {
         exitId: id,
       })),
     );
+  }
+
+  async getLatestExitBlock(
+    chainId: bigint,
+    manager: EntityManager = this.inner.manager,
+  ): Promise<number | null> {
+    const { blockNumber } = await manager
+      .getRepository(ExitModel)
+      .createQueryBuilder('e')
+      .orderBy('e.blockNumber', 'DESC')
+      .where({
+        from: {
+          chainId,
+        },
+      })
+      .select('e.blockNumber', 'blockNumber')
+      .getRawOne<{ blockNumber: number }>();
+
+    return blockNumber || 0;
   }
 }

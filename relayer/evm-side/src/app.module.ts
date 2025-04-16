@@ -8,7 +8,7 @@ import { format, transports } from 'winston';
 import { EvmModule } from './modules/evm/evm.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RepositoriesModule } from './repositories/repositories.module';
-import { MidenModule } from './modules/miden/miden.module';
+import { MidenModule } from './modules/miden';
 import { RelayerModule } from './modules/relayer/relayer.module';
 
 @Module({
@@ -43,10 +43,18 @@ import { RelayerModule } from './modules/relayer/relayer.module';
         };
       },
     }),
+    MidenModule.registerAsync({
+      imports: [MainConfigModule],
+      inject: [MainConfigService],
+      useFactory(config: MainConfigService) {
+        return {
+          chainIds: config.getMidenChainIds(),
+        };
+      },
+    }),
     RelayerModule,
     ScheduleModule.forRoot(),
     RepositoriesModule,
-    MidenModule,
     RelayerModule,
   ],
 })

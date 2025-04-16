@@ -1,5 +1,6 @@
 import { JsonRpcProvider, Provider } from 'ethers';
 import { ConfigService } from '@nestjs/config';
+import { MidenApiService } from './miden.service';
 
 export class RpcConfigService {
   static async connectEvmChains(
@@ -29,12 +30,22 @@ export class RpcConfigService {
   }
 
   static async connectMidenChains(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _midenChainIds: Array<bigint>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _config: ConfigService,
-  ): Promise<Map<bigint, any>> {
-    const result: Map<bigint, Provider> = new Map();
+    midenChainIds: Array<bigint>,
+    config: ConfigService,
+  ): Promise<Map<bigint, MidenApiService>> {
+    const result: Map<bigint, MidenApiService> = new Map();
+
+    for (const chainId of midenChainIds) {
+      const envKey = `MIDEN_RPC_CHAIN_${chainId}`;
+      const url: string = config.getOrThrow(envKey);
+      if (!URL.canParse(url)) {
+        throw new Error(`Malformed url in env var "${envKey}"`);
+      }
+
+      const provider = new MidenApiService(url);
+
+      result.set(chainId, provider);
+    }
     return result;
   }
 }

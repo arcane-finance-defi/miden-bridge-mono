@@ -1,6 +1,6 @@
 use crate::onchain::deploy_token::insert_new_fungible_faucet;
 use crate::onchain::errors::OnchainError;
-use crate::onchain::mint_note::{mint_fungible_asset, Asset, MintedNote};
+use crate::onchain::mint_note::{mint_asset, Asset, MintedNote};
 use crate::store::Store;
 use miden_bridge::notes::bridge::croschain;
 use miden_client::block::BlockHeader;
@@ -17,6 +17,7 @@ use miden_client::Client;
 use miden_crypto::rand::{FeltRng, RpoRandomCoin};
 use miden_crypto::{FieldElement, Word};
 use miden_objects::account::{AccountDelta, AccountId, AccountStorageMode};
+use miden_objects::{Felt, Word};
 use miden_objects::asset::FungibleAsset;
 use miden_objects::note::{
     Note, NoteAssets, NoteExecutionHint, NoteExecutionMode, NoteFile, NoteInputs, NoteMetadata,
@@ -126,7 +127,7 @@ pub async fn execute_tx(
 pub enum ClientCommand {
     GetChainTip(OneshotSender<Result<BlockNumber, OnchainError>>),
     MintNote {
-        recipient: AccountId,
+        recipient: Word,
         amount: u64,
         asset: Asset,
         tx: OneshotSender<Result<MintedNote, OnchainError>>,
@@ -142,7 +143,7 @@ async fn mint_note(
     execution_client: &mut Client,
     keystore: &FilesystemKeyStore<StdRng>,
     assets_store: &Store,
-    recipient: AccountId,
+    recipient: Word,
     amount: u64,
     asset: Asset,
 ) -> Result<MintedNote, OnchainError> {
@@ -171,15 +172,10 @@ async fn mint_note(
             },
         };
 
-    let mint_result = mint_fungible_asset(execution_client, faucet_id, recipient, amount).await?;
+    let mint_result = mint_asset(execution_client, faucet_id, recipient, amount).await?;
     let note_id = mint_result.created_notes().get_note(0).id();
-    let output_note = execution_client.get_output_note(note_id).await?.unwrap();
 
     let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
-
-    let note_file = output_note.into_note_file(&NoteExportType::NoteDetails).unwrap();
-    let path = format!("./minted_note_wrapper_{}_{}.mno", timestamp.as_secs(), note_id.to_hex());
-    note_file.write(path).unwrap();
 
     println!("Minting took {}", now.elapsed().as_millis());
 

@@ -87,6 +87,12 @@ export class ExitModel {
   })
   calldata?: string;
 
-  @Column({ name: 'transaction_id', type: 'text' })
-  txId!: string;
+  @Column({ name: 'call_address', type: 'text', nullable: true })
+  callAddress?: string;
+
+  @Column({ name: 'transaction_id', type: 'text', nullable: true })
+  txId?: string;
+
+  @Column({ name: 'block_number', type: 'int', nullable: false })
+  blockNumber!: number;
 }

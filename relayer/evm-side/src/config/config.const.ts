@@ -20,3 +20,9 @@ export function getEvmScanBatchSizeEnvVarKey(
 ): `EVM_SCAN_BATCH_SIZE_${string}` {
   return `EVM_SCAN_BATCH_SIZE_${chainId.toString()}`;
 }
+
+export function getMidenStartBlockScanEnvVarKey(
+  chainId: bigint,
+): `MIDEN_START_SCAN_BLOCK_${string}` {
+  return `MIDEN_START_SCAN_BLOCK_${chainId.toString()}`;
+}

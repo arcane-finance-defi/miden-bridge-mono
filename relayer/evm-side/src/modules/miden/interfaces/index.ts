@@ -1,1 +1,1 @@
-export * from './miden.interface';
+export * from '../../../config/interfaces/miden.interface';
