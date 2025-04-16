@@ -8,7 +8,7 @@ use miden_client::keystore::FilesystemKeyStore;
 use miden_client::note::BlockNumber;
 use miden_client::rpc::{Endpoint, NodeRpcClient, TonicRpcClient};
 use miden_client::store::sqlite_store::SqliteStore;
-use miden_client::store::NoteExportType;
+use miden_client::store::NoteFilter;
 use miden_client::transaction::{
     LocalTransactionProver, TransactionProver, TransactionRequest, TransactionRequestBuilder,
     TransactionResult,
@@ -17,12 +17,12 @@ use miden_client::Client;
 use miden_crypto::rand::{FeltRng, RpoRandomCoin};
 use miden_crypto::{FieldElement, Word};
 use miden_objects::account::{AccountDelta, AccountId, AccountStorageMode};
-use miden_objects::{Felt, Word};
 use miden_objects::asset::FungibleAsset;
 use miden_objects::note::{
-    Note, NoteAssets, NoteExecutionHint, NoteExecutionMode, NoteFile, NoteInputs, NoteMetadata,
-    NoteRecipient, NoteTag, NoteType,
+    Note, NoteAssets, NoteExecutionHint, NoteFile, NoteInputs, NoteMetadata, NoteRecipient,
+    NoteTag, NoteType,
 };
+use miden_objects::transaction::OutputNote;
 use miden_objects::Felt;
 use rand::rngs::StdRng;
 use rand::Rng;
@@ -31,6 +31,8 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender as OneshotSender;
+
+const BRIDGE_USECASE: u16 = 15593;
 
 pub struct OnchainClient {
     pub rpc: Arc<dyn NodeRpcClient + Send + Sync + 'static>,
@@ -197,12 +199,7 @@ async fn burn_asset(
 
     let chain_id: u64 = 123;
 
-    let mut rng = RpoRandomCoin::new(Word::from([
-        Felt::new(456),
-        Felt::new(456),
-        Felt::new(456),
-        Felt::new(456),
-    ]));
+    let rng = execution_client.rng();
 
     let output_serial_num = rng.draw_word();
 
@@ -228,7 +225,7 @@ async fn burn_asset(
         NoteMetadata::new(
             sender,
             NoteType::Public,
-            NoteTag::from_account_id(faucet_id, NoteExecutionMode::Local)?,
+            NoteTag::for_local_use_case(BRIDGE_USECASE, 0)?,
             NoteExecutionHint::Always,
             Felt::ZERO,
         )?,
@@ -240,9 +237,13 @@ async fn burn_asset(
     );
 
     let tx_request = TransactionRequestBuilder::new()
-        .with_unauthenticated_input_notes([(note, None)])
+        .with_own_output_notes([OutputNote::Full(note)])
         .build()?;
-    execute_tx(execution_client, tx_request, faucet_id).await?;
+    let result = execute_tx(execution_client, tx_request, sender).await?;
+    let output_notes = result.created_notes();
+    println!("Output notes len {:?}", output_notes.num_notes());
+    let output_note_id = output_notes.get_note(0).id();
+    println!("Output note id {}", output_note_id);
     Ok(())
 }
 
@@ -273,23 +274,17 @@ pub fn client_process_loop(
     let note_file = NoteFile::read(&new_note_path).unwrap();
     runtime.block_on(execution_client.import_note(note_file)).unwrap();
 
+    runtime
+        .block_on(
+            execution_client.add_note_tag(NoteTag::for_local_use_case(BRIDGE_USECASE, 0).unwrap()),
+        )
+        .unwrap();
     runtime.block_on(execution_client.sync_state()).unwrap();
 
     let consumable_notes = runtime
         .block_on(execution_client.get_consumable_notes(Some(account_id)))
         .unwrap();
-    println!("Consumable Notes: {:?}", consumable_notes);
-
-    if !consumable_notes.is_empty() {
-        let transaction_request = TransactionRequestBuilder::new()
-            .with_authenticated_input_notes([(consumable_notes[0].0.id(), None)])
-            .build()
-            .unwrap();
-        let result = runtime
-            .block_on(execute_tx(&mut execution_client, transaction_request, account_id))
-            .unwrap();
-        println!("Transaction execution result: {:?}", result);
-    }
+    println!("Consumable Notes count: {}", consumable_notes.len());
 
     let account = runtime.block_on(execution_client.get_account(account_id)).unwrap().unwrap();
     let assets = account.account().vault().assets();
@@ -297,9 +292,36 @@ pub fn client_process_loop(
         println!("Found asset: {:?}", asset);
         let fungible = asset.unwrap_fungible();
         let faucet_id = fungible.faucet_id();
-        let burn = runtime
-            .block_on(burn_asset(&mut execution_client, faucet_id, 10, account_id))
+        let burn = runtime.block_on(burn_asset(&mut execution_client, faucet_id, 10, account_id));
+        println!("{:?}", burn);
+    }
+
+    runtime.block_on(execution_client.sync_state()).unwrap();
+    let tag = NoteTag::for_local_use_case(BRIDGE_USECASE, 0).unwrap();
+    let all_notes = runtime.block_on(execution_client.get_output_notes(NoteFilter::All)).unwrap();
+    for note in all_notes {
+        if note.metadata().tag() == tag {
+            println!("Note id {}", note.id());
+            println!("Note sender {}", note.metadata().sender());
+            println!("Expected height {}", note.expected_height());
+            println!("Recipient {:?}", note.recipient());
+            println!("Note assets {:?}", note.assets());
+        }
+    }
+
+    println!("BRIDGE_USECASE {:?}", NoteTag::for_local_use_case(BRIDGE_USECASE, 0).unwrap());
+    if !consumable_notes.is_empty() {
+        /*
+        let transaction_request = TransactionRequestBuilder::new()
+            .with_authenticated_input_notes([(consumable_notes[0].0.id(), None)])
+            .build()
             .unwrap();
+        let result = runtime
+            .block_on(execute_tx(&mut execution_client, transaction_request, account_id))
+            .unwrap();
+
+        println!("Transaction execution result: {:?}", result);
+         */
     }
 
     loop {
