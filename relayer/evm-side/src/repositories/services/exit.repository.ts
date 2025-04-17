@@ -34,6 +34,7 @@ export class ExitRepository {
       .where('f.id IS NULL')
       .take(pageSize)
       .skip(pageNum * pageSize)
+      .orderBy('e.blockNumber', 'DESC')
       .getManyAndCount();
   }
 

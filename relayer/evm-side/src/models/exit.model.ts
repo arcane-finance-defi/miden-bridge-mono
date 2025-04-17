@@ -64,7 +64,7 @@ export class ExitModel {
   assetAmount: BigNumber;
 
   @Column({ name: 'asset_metadata_name', type: 'text', nullable: true })
-  assetName!: string;
+  assetName?: string;
 
   @Column({ name: 'asset_metadata_symbol', type: 'text', nullable: true })
   assetSymbol!: string;
