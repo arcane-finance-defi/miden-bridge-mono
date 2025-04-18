@@ -65,7 +65,7 @@ export class PollerService {
       rpcHeight - this.finalizationBlockGap,
     );
 
-    if (endBlock <= startBlock) {
+    if (endBlock < startBlock) {
       return; //skip
     }
 
