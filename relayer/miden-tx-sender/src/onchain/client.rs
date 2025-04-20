@@ -19,7 +19,7 @@ use miden_crypto::{FieldElement, Word};
 use miden_objects::account::{AccountDelta, AccountId, AccountStorageMode};
 use miden_objects::asset::FungibleAsset;
 use miden_objects::note::{
-    Note, NoteAssets, NoteExecutionHint, NoteFile, NoteInputs, NoteMetadata, NoteRecipient,
+    Note, NoteAssets, NoteExecutionHint, NoteInputs, NoteMetadata, NoteRecipient,
     NoteTag, NoteType,
 };
 use miden_objects::transaction::OutputNote;
@@ -27,7 +27,7 @@ use miden_objects::Felt;
 use rand::rngs::StdRng;
 use rand::Rng;
 use std::sync::Arc;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::Instant;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender as OneshotSender;
@@ -177,8 +177,6 @@ async fn mint_note(
     let mint_result = mint_asset(execution_client, faucet_id, recipient, amount).await?;
     let note_id = mint_result.created_notes().get_note(0).id();
 
-    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
-
     println!("Minting took {}", now.elapsed().as_millis());
 
     Ok(MintedNote {
@@ -229,11 +227,7 @@ async fn burn_asset(
             NoteExecutionHint::Always,
             Felt::ZERO,
         )?,
-        NoteRecipient::new(
-            [Felt::new(1), Felt::ZERO, Felt::ZERO, Felt::ZERO],
-            croschain(),
-            note_inputs,
-        ),
+        NoteRecipient::new(output_serial_num, croschain(), note_inputs),
     );
 
     let tx_request = TransactionRequestBuilder::new()
@@ -267,18 +261,37 @@ pub fn client_process_loop(
     let mut execution_client =
         Client::new(client.rpc.clone(), Box::new(rng), miden_client_store, keystore.clone(), false);
 
-    runtime.block_on(execution_client.sync_state()).unwrap();
+    let tag = NoteTag::for_local_use_case(BRIDGE_USECASE, 0).unwrap();
+    let notes = runtime.block_on(client.rpc.sync_notes(0u32.into(), &[tag])).unwrap();
+    println!("{}", notes.notes.len());
+    println!("{}", notes.notes[0].note_id());
+    println!("{}", notes.block_header.block_num());
 
-    let account_id = AccountId::from_hex("0x809f07aa1c5492800003c988372cbd").unwrap();
-    let new_note_path = "./minted_note_wrapper_1744713607_0x35f59954a63c43722899c31f7510ba5b639e9fbda6716724bd07d43ed492e002.mno";
-    let note_file = NoteFile::read(&new_note_path).unwrap();
-    runtime.block_on(execution_client.import_note(note_file)).unwrap();
-
+    let more_notes = runtime
+        .block_on(client.rpc.sync_notes(notes.block_header.block_num() + 1, &[tag]))
+        .unwrap();
+    println!("{}", more_notes.notes.len());
+    println!("{}", more_notes.notes[0].note_id());
+    println!("{}", more_notes.block_header.block_num());
+    /*
     runtime
         .block_on(
             execution_client.add_note_tag(NoteTag::for_local_use_case(BRIDGE_USECASE, 0).unwrap()),
         )
         .unwrap();
+
+
+     */
+    runtime.block_on(execution_client.sync_state()).unwrap();
+
+    let account_id = AccountId::from_hex("0x809f07aa1c5492800003c988372cbd").unwrap();
+    /*
+    let new_note_path = "./minted_note_wrapper_1744713607_0x35f59954a63c43722899c31f7510ba5b639e9fbda6716724bd07d43ed492e002.mno";
+    let note_file = NoteFile::read(&new_note_path).unwrap();
+    runtime.block_on(execution_client.import_note(note_file)).unwrap();
+
+     */
+
     runtime.block_on(execution_client.sync_state()).unwrap();
 
     let consumable_notes = runtime
@@ -286,19 +299,24 @@ pub fn client_process_loop(
         .unwrap();
     println!("Consumable Notes count: {}", consumable_notes.len());
 
-    let account = runtime.block_on(execution_client.get_account(account_id)).unwrap().unwrap();
-    let assets = account.account().vault().assets();
-    for asset in assets {
-        println!("Found asset: {:?}", asset);
-        let fungible = asset.unwrap_fungible();
-        let faucet_id = fungible.faucet_id();
-        let burn = runtime.block_on(burn_asset(&mut execution_client, faucet_id, 10, account_id));
-        println!("{:?}", burn);
+    let account = runtime.block_on(execution_client.get_account(account_id)).unwrap();
+    if let Some(acc) = account {
+        let assets = acc.account().vault().assets();
+        for asset in assets {
+            println!("Found asset: {:?}", asset);
+            let fungible = asset.unwrap_fungible();
+            let faucet_id = fungible.faucet_id();
+            let burn =
+                runtime.block_on(burn_asset(&mut execution_client, faucet_id, 10, account_id));
+            println!("{:?}", burn);
+        }
     }
 
     runtime.block_on(execution_client.sync_state()).unwrap();
     let tag = NoteTag::for_local_use_case(BRIDGE_USECASE, 0).unwrap();
     let all_notes = runtime.block_on(execution_client.get_output_notes(NoteFilter::All)).unwrap();
+
+    println!("All Notes count: {}", all_notes.len());
     for note in all_notes {
         if note.metadata().tag() == tag {
             println!("Note id {}", note.id());
