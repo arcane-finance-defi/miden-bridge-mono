@@ -576,9 +576,9 @@ dependencies = [
 
 [[package]]
 name = "miden-assembly"
-version = "0.13.0"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce5680a0e75470389b65cc00900422ad7e1aa7972477c75ff88f63c3a01671e9"
+checksum = "75d1cb02d807c2481f365feca966bedb74c66c765923d04c3c23ea678afaf148"
 dependencies = [
  "aho-corasick",
  "lalrpop",
@@ -739,9 +739,9 @@ dependencies = [
 
 [[package]]
 name = "miden-processor"
-version = "0.13.0"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e5f362138a7bfe6c20246de651e848566843a0d5062cc4a7a8ebff6bd14668d"
+checksum = "d4e70b053c587014396d06be3502e3952777923bee11729b7514c060fdc0d2c8"
 dependencies = [
  "miden-air",
  "miden-core",
@@ -765,9 +765,9 @@ dependencies = [
 
 [[package]]
 name = "miden-stdlib"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "116d30a8db5167f88944509007b8bb7aad4fa0d9d03f2610b4e80be3a198ad37"
+checksum = "77e59c4dd1079bffe8407694b386ae781feaf1f7acb9d1cefa858578bc99cad4"
 dependencies = [
  "miden-assembly",
  "miden-core",
