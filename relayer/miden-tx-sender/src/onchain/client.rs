@@ -267,30 +267,9 @@ pub fn client_process_loop(
     println!("{}", notes.notes[0].note_id());
     println!("{}", notes.block_header.block_num());
 
-    let more_notes = runtime
-        .block_on(client.rpc.sync_notes(notes.block_header.block_num() + 1, &[tag]))
-        .unwrap();
-    println!("{}", more_notes.notes.len());
-    println!("{}", more_notes.notes[0].note_id());
-    println!("{}", more_notes.block_header.block_num());
-    /*
-    runtime
-        .block_on(
-            execution_client.add_note_tag(NoteTag::for_local_use_case(BRIDGE_USECASE, 0).unwrap()),
-        )
-        .unwrap();
-
-
-     */
     runtime.block_on(execution_client.sync_state()).unwrap();
 
     let account_id = AccountId::from_hex("0x809f07aa1c5492800003c988372cbd").unwrap();
-    /*
-    let new_note_path = "./minted_note_wrapper_1744713607_0x35f59954a63c43722899c31f7510ba5b639e9fbda6716724bd07d43ed492e002.mno";
-    let note_file = NoteFile::read(&new_note_path).unwrap();
-    runtime.block_on(execution_client.import_note(note_file)).unwrap();
-
-     */
 
     runtime.block_on(execution_client.sync_state()).unwrap();
 
