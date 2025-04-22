@@ -38,7 +38,7 @@ rand_chacha = "0.9.0"
 regex = { version = "1.10" }
 walkdir = { version = "2.5" }
 miden-assembly = { version = "0.13.2", features = ["std"] }
-miden-stdlib = "0.13.1"
+miden-stdlib = "0.13.2"
 miden-lib = { version = "0.8.0" }
 miden-objects = { version = "0.8.1" }
 
