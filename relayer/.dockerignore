@@ -1,0 +1,13 @@
+*/node_modules
+*/generated
+*/dist
+*/.gitignore
+*/config.yaml
+*/docker-compose.yaml
+*/tests
+*/jest-config.js
+*/README.md
+*/Dockerfile
+*/config.json
+*/.env
+miden-tx-sender
