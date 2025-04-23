@@ -61,6 +61,8 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
         TokenSymbol::new("TEST").into_diagnostic()?,
         6,
         Felt::new(1000000),
+        1,
+        [Felt::new(1),Felt::new(1),Felt::new(1)],
         AccountStorageMode::Private,
         AuthScheme::RpoFalcon512 { pub_key: pub_key.clone() },
     ).into_diagnostic()?;
