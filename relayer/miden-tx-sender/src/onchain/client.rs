@@ -8,18 +8,16 @@ use miden_client::note::BlockNumber;
 use miden_client::rpc::{Endpoint, NodeRpcClient, TonicRpcClient};
 use miden_client::store::sqlite_store::SqliteStore;
 use miden_client::transaction::{
-    LocalTransactionProver, TransactionProver, TransactionRequest, TransactionResult,
+    TransactionRequest, TransactionResult,
 };
 use miden_client::Client;
 use miden_crypto::rand::RpoRandomCoin;
-use miden_objects::account::{AccountDelta, AccountId, AccountStorageMode};
+use miden_objects::account::{AccountId, AccountStorageMode};
 use miden_objects::{Felt, Word};
 use rand::rngs::StdRng;
 use rand::Rng;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
-use miden_client::rpc::domain::note::NetworkNote;
-use miden_objects::note::{Note, NoteId, NoteTag, NoteType};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender as OneshotSender;
@@ -65,56 +63,6 @@ impl OnchainClient {
         let latest_block_height = sync_response.chain_tip;
 
         Ok(BlockNumber::from(latest_block_height))
-    }
-
-    pub async fn sync_notes(
-        &self,
-        block_height: BlockNumber,
-        tags: Vec<NoteTag>
-    ) -> Result<(u32, Vec<(Note, BlockNumber)>), OnchainError> {
-        let mut height_to_request = block_height;
-        let mut chain_tip: u32 = 0;
-
-        let mut collected_notes = Vec::new();
-        loop {
-            let sync_result = self.rpc.sync_notes(
-                height_to_request,
-                &tags
-            ).await.map_err(OnchainError::from)?;
-
-            chain_tip = sync_result.chain_tip;
-
-            let public_note_ids: Vec<NoteId> = sync_result.notes.iter()
-                .filter(|note| note.metadata().note_type() == NoteType::Public)
-                .map(|note| note.note_id().clone()).collect();
-
-            let mut resolved_notes = Vec::new();
-
-            let fetched_notes = self.rpc.get_notes_by_id(public_note_ids.as_slice())
-                .await.map_err(OnchainError::from)?;
-
-            for network_note in fetched_notes {
-                match network_note {
-                    NetworkNote::Public(note, proof) =>
-                        resolved_notes.push((note, proof.location().block_num())),
-                    _ => unreachable!()
-                }
-            }
-
-            collected_notes.push(resolved_notes.clone());
-            height_to_request = resolved_notes.iter()
-                    .map(|(_, height)| height.clone())
-                    .max()
-                    .or(Some(block_height.clone())).unwrap();
-
-            if resolved_notes.is_empty() {
-                break;
-            }
-        }
-
-        let collected_notes = collected_notes.concat();
-
-        Ok((chain_tip, collected_notes))
     }
 }
 
@@ -199,7 +147,7 @@ async fn mint_note(
 }
 
 pub fn client_process_loop(
-    mut client: &OnchainClient,
+    mut client: &mut OnchainClient,
     mut receiver: Receiver<ClientCommand>,
     runtime: Runtime,
 ) {
@@ -244,7 +192,6 @@ pub fn client_process_loop(
 
                 let result = runtime.block_on(
                     poll_events(
-                        client,
                         &mut execution_client,
                         BlockNumber::from(from_block),
                     )

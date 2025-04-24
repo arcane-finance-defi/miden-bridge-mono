@@ -117,14 +117,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let figment = rocket.figment();
     let config: Config = figment.extract().expect("config");
 
-    let onchain: OnchainClient =
+    let mut onchain: OnchainClient =
         OnchainClient::new(config.rpc_url().clone(), config.rpc_timeout_ms().clone());
 
     let (sender, receiver) = tokio::sync::mpsc::channel(10);
 
     std::thread::spawn(move || {
         let runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
-        client_process_loop(&onchain, receiver, runtime);
+        client_process_loop(&mut onchain, receiver, runtime);
     });
 
     let onchain: OnchainClient =

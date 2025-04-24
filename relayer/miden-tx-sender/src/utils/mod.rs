@@ -1,6 +1,6 @@
 use alloy_primitives::Address;
 use alloy_primitives::hex::FromHex;
-use miden_objects::{Felt, FieldElement, StarkField};
+use miden_objects::{Felt, StarkField};
 use miden_objects::utils::Serializable;
 use errors::AddressFormatError;
 

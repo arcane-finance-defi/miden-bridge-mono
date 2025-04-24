@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use miden_bridge::accounts::token_wrapper::bridge_note_tag;
 use miden_client::Client;
+use miden_client::store::{InputNoteRecord, NoteFilter};
 use miden_objects::block::BlockNumber;
 use miden_objects::utils::ToHex;
 use rocket::serde::{Deserialize, Serialize};
 use crate::onchain::asset::Asset;
 use crate::onchain::errors::OnchainError;
-use crate::onchain::OnchainClient;
 use crate::utils::felts_to_evm_addresses;
 use crate::utils::metadata::decode_slot_into_token_metadata;
 use crate::utils::origin::decode_slot_into_origin_info;
@@ -32,35 +32,43 @@ pub struct PolledEvents {
 }
 
 pub async fn poll_events(
-    mut client: &OnchainClient,
-    mut storage_client: &mut Client,
+    storage_client: &mut Client,
     from: BlockNumber
 ) -> Result<PolledEvents, OnchainError> {
+    storage_client.add_note_tag(bridge_note_tag()).await.map_err(OnchainError::from)?;
     storage_client.sync_state().await.map_err(OnchainError::from)?;
 
-    let (chain_tip, notes) = client.sync_notes(
-        from,
-        vec![bridge_note_tag()]
-    ).await.map_err(OnchainError::from)?;
+    let notes = storage_client.get_input_notes(NoteFilter::Committed)
+        .await.map_err(OnchainError::from)?;
+
+    let notes: Vec<(&InputNoteRecord, BlockNumber)> = notes.iter().filter(|n| n.metadata().unwrap().tag() == bridge_note_tag() &&
+        n.inclusion_proof().unwrap().location().block_num().as_u64() >= from.as_u64())
+            .map(|n| (n, n.inclusion_proof().unwrap().location().block_num())).collect();
 
     let mut whitelisted_notes = Vec::new();
 
     let mut tokens = HashMap::new();
 
     for (note, block) in notes.clone() {
-        let account = storage_client.get_account(note.metadata().sender())
+        let sender = note.metadata().unwrap().sender();
+        let account = storage_client.get_account(
+            sender.clone()
+        )
             .await.map_err(OnchainError::from)?
-            .ok_or(OnchainError::AccountNotFoundInStorage(note.metadata().sender()));
+            .ok_or(OnchainError::AccountNotFoundInStorage(sender.clone()));
         if let Ok(account) = account {
-            tokens.insert(note.metadata().sender().to_hex(), account.account().clone());
-            whitelisted_notes.push((note, block))
+            tokens.insert(sender.to_hex(), account.account().clone());
+            whitelisted_notes.push((note.clone(), block))
         }
     }
+
+    let chain_tip = storage_client.get_sync_height().await.map_err(OnchainError::from)?.as_u32();
 
     Ok(PolledEvents {
         chain_tip,
         events: whitelisted_notes.iter().map(|(event, block_number)| {
-            let token_account = tokens.get(&event.metadata().sender().to_hex())
+            let sender = event.metadata().unwrap().sender();
+            let token_account = tokens.get(&sender.clone().to_hex())
                 .unwrap().clone();
 
             let origin_slot = token_account.storage().slots().get(2).unwrap();
@@ -72,7 +80,7 @@ pub async fn poll_events(
                 metadata_slot.clone().value()
             ).unwrap();
 
-            let receiver_felts = &event.inputs().values()[5..8];
+            let receiver_felts = &event.details().inputs().values()[5..8];
             let receiver_address = felts_to_evm_addresses([
                 receiver_felts[2],
                 receiver_felts[1],
@@ -81,7 +89,7 @@ pub async fn poll_events(
 
             ExitEvent {
                 note_id: event.id().to_hex(),
-                block_number: block_number.as_u32(),
+                block_number: block_number.clone().as_u32(),
                 asset: Asset {
                     origin_address,
                     origin_network,
@@ -89,8 +97,8 @@ pub async fn poll_events(
                     asset_symbol: symbol.to_str()
                 },
                 receiver: receiver_address.to_hex_with_prefix(),
-                destination_chain: event.inputs().values()[4].as_int(),
-                amount: event.inputs().values()[0].as_int(),
+                destination_chain: event.details().inputs().values()[4].as_int(),
+                amount: event.details().inputs().values()[0].as_int(),
                 call_data: None,
                 call_address: None,
             }
