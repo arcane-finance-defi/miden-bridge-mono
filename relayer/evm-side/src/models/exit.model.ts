@@ -77,8 +77,8 @@ export class ExitModel {
     nullable: true,
     type: 'bytea',
     transformer: {
-      from(value: Buffer) {
-        return '0x' + value.toString('hex');
+      from(value: Buffer | null) {
+        return value == null ? null : '0x' + value.toString('hex');
       },
       to(value: string | null) {
         return value == null
