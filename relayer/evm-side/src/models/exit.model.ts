@@ -80,8 +80,10 @@ export class ExitModel {
       from(value: Buffer) {
         return '0x' + value.toString('hex');
       },
-      to(value: string) {
-        return Buffer.from(value.replace('0x', ''), 'hex');
+      to(value: string | null) {
+        return value == null
+          ? null
+          : Buffer.from(value.replace('0x', ''), 'hex');
       },
     },
   })

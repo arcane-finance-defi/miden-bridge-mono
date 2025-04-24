@@ -54,7 +54,7 @@ export class MidenApiService {
       response: { status },
       error,
     } = await this.client['/poll'].GET({
-      params: { query: { fromHeight } },
+      params: { query: { from: fromHeight } },
     });
 
     if (status !== 200) {

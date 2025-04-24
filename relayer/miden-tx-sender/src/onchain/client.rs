@@ -1,13 +1,12 @@
 use crate::onchain::deploy_token::insert_new_fungible_faucet;
 use crate::onchain::errors::OnchainError;
-use crate::onchain::mint_note::{mint_asset, Asset, MintedNote};
+use crate::onchain::mint_note::{mint_asset, MintedNote};
 use crate::store::Store;
 use miden_client::block::BlockHeader;
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::note::BlockNumber;
 use miden_client::rpc::{Endpoint, NodeRpcClient, TonicRpcClient};
 use miden_client::store::sqlite_store::SqliteStore;
-use miden_client::store::NoteExportType;
 use miden_client::transaction::{
     LocalTransactionProver, TransactionProver, TransactionRequest, TransactionResult,
 };
@@ -19,9 +18,14 @@ use rand::rngs::StdRng;
 use rand::Rng;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use miden_client::rpc::domain::note::NetworkNote;
+use miden_objects::note::{Note, NoteId, NoteTag, NoteType};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender as OneshotSender;
+use crate::onchain::asset::Asset;
+use crate::onchain::poll_events::{poll_events, PolledEvents};
+use crate::utils::evm_address_to_felts;
 
 pub struct OnchainClient {
     pub rpc: Arc<dyn NodeRpcClient + Send + Sync + 'static>,
@@ -63,43 +67,54 @@ impl OnchainClient {
         Ok(BlockNumber::from(latest_block_height))
     }
 
-    pub async fn execute_tx(
-        &mut self,
-        tx: TransactionRequest,
-        faucet_id: AccountId,
-    ) -> Result<AccountDelta, OnchainError> {
-        let mut rng = rand::thread_rng();
-        let coin_seed: [u64; 4] = rng.r#gen();
+    pub async fn sync_notes(
+        &self,
+        block_height: BlockNumber,
+        tags: Vec<NoteTag>
+    ) -> Result<(u32, Vec<(Note, BlockNumber)>), OnchainError> {
+        let mut height_to_request = block_height;
+        let mut chain_tip: u32 = 0;
 
-        let rng = RpoRandomCoin::new(coin_seed.map(Felt::new));
+        let mut collected_notes = Vec::new();
+        loop {
+            let sync_result = self.rpc.sync_notes(
+                height_to_request,
+                &tags
+            ).await.map_err(OnchainError::from)?;
 
-        let tx = {
-            let store = SqliteStore::new("./DB.sql".into()).await?;
-            let store: Arc<_> = Arc::new(store);
+            chain_tip = sync_result.chain_tip;
 
-            let rpc = Arc::new(TonicRpcClient::new(&self.endpoint, self.timeout_ms.clone()));
+            let public_note_ids: Vec<NoteId> = sync_result.notes.iter()
+                .filter(|note| note.metadata().note_type() == NoteType::Public)
+                .map(|note| note.note_id().clone()).collect();
 
-            let mut execution_client =
-                Client::new(rpc, Box::new(rng), store.clone(), Arc::new(()), false);
+            let mut resolved_notes = Vec::new();
 
-            execution_client
-                .new_transaction(faucet_id, tx)
-                .await
-                .map_err(OnchainError::from)?
-        };
+            let fetched_notes = self.rpc.get_notes_by_id(public_note_ids.as_slice())
+                .await.map_err(OnchainError::from)?;
 
-        let prover = LocalTransactionProver::default();
+            for network_note in fetched_notes {
+                match network_note {
+                    NetworkNote::Public(note, proof) =>
+                        resolved_notes.push((note, proof.location().block_num())),
+                    _ => unreachable!()
+                }
+            }
 
-        let proven_tx = prover
-            .prove(tx.executed_transaction().clone().into())
-            .await
-            .map_err(OnchainError::from)?;
+            collected_notes.push(resolved_notes.clone());
+            height_to_request = resolved_notes.iter()
+                    .map(|(_, height)| height.clone())
+                    .max()
+                    .or(Some(block_height.clone())).unwrap();
 
-        let mut rpc = Box::new(TonicRpcClient::new(&self.endpoint, self.timeout_ms.clone()));
+            if resolved_notes.is_empty() {
+                break;
+            }
+        }
 
-        rpc.submit_proven_transaction(proven_tx).await.map_err(OnchainError::from)?;
+        let collected_notes = collected_notes.concat();
 
-        Ok(tx.executed_transaction().account_delta().clone())
+        Ok((chain_tip, collected_notes))
     }
 }
 
@@ -123,6 +138,10 @@ pub enum ClientCommand {
         asset: Asset,
         tx: OneshotSender<Result<MintedNote, OnchainError>>,
     },
+    PollEvents {
+        from_block: u32,
+        tx: OneshotSender<Result<PolledEvents, OnchainError>>,
+    }
 }
 
 async fn get_sync_height(execution_client: &mut Client) -> Result<BlockNumber, OnchainError> {
@@ -142,21 +161,23 @@ async fn mint_note(
     execution_client.sync_state().await?;
 
     let faucet_id =
-        match assets_store.get_faucet_id(asset.origin_network, &asset.origin_address).await? {
+        match assets_store.get_faucet_id(asset.origin_network.clone(), &asset.origin_address.clone()).await? {
             Some(id) => id,
             None => {
                 let (account, _) = insert_new_fungible_faucet(
                     execution_client,
-                    AccountStorageMode::Private,
+                    AccountStorageMode::Public,
                     &keystore,
                     &asset.asset_symbol,
                     asset.decimals,
+                    u64::from(asset.origin_network),
+                    evm_address_to_felts(asset.origin_address.clone()).map_err(OnchainError::from)?
                 )
                 .await?;
 
                 let account_id = account.id();
                 assets_store
-                    .add_faucet_id(asset.origin_network, &asset.origin_address, &account_id)
+                    .add_faucet_id(asset.origin_network.clone(), &asset.origin_address.clone(), &account_id)
                     .await?;
 
                 account_id
@@ -178,7 +199,7 @@ async fn mint_note(
 }
 
 pub fn client_process_loop(
-    mut client: OnchainClient,
+    mut client: &OnchainClient,
     mut receiver: Receiver<ClientCommand>,
     runtime: Runtime,
 ) {
@@ -219,6 +240,18 @@ pub fn client_process_loop(
 
                 tx.send(result).unwrap();
             },
+            ClientCommand::PollEvents { from_block, tx } => {
+
+                let result = runtime.block_on(
+                    poll_events(
+                        client,
+                        &mut execution_client,
+                        BlockNumber::from(from_block),
+                    )
+                );
+
+                tx.send(result).unwrap()
+            }
         }
     }
 }

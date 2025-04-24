@@ -4,13 +4,14 @@ extern crate rocket;
 mod config;
 mod onchain;
 mod store;
+mod utils;
 
 use rocket::State as RocketState;
 use std::sync::Arc;
 
 use crate::config::Config;
 use crate::onchain::client::{client_process_loop, ClientCommand};
-use crate::onchain::mint_note::{mint_asset, mint_fungible_asset, Asset, MintArgs, MintedNote};
+use crate::onchain::mint_note::{mint_asset, mint_fungible_asset, MintArgs, MintedNote};
 use crate::onchain::OnchainClient;
 use dotenv::dotenv;
 use miden_bridge::accounts::token_wrapper::TokenWrapperAccount;
@@ -40,6 +41,7 @@ use rocket::http::Status;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::{Receiver, Sender};
+use crate::onchain::poll_events::PolledEvents;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -87,6 +89,17 @@ async fn chain_tip(state: &RocketState<State>) -> Result<String, Status> {
     }
 }
 
+#[get("/poll?<from>")]
+async fn poll(from: u32, state: &RocketState<State>) -> Result<Json<PolledEvents>, Status> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    state.sender.try_send(ClientCommand::PollEvents{ tx, from_block: from }).unwrap();
+
+    match rx.await {
+        Ok(Ok(response)) => Ok(Json(response)),
+        Ok(Err(_)) | Err(_) => Err(Status::InternalServerError),
+    }
+}
+
 struct State {
     client: Arc<OnchainClient>,
     sender: Sender<ClientCommand>,
@@ -111,14 +124,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     std::thread::spawn(move || {
         let runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
-        client_process_loop(onchain, receiver, runtime);
+        client_process_loop(&onchain, receiver, runtime);
     });
 
     let onchain: OnchainClient =
         OnchainClient::new(config.rpc_url().clone(), config.rpc_timeout_ms().clone());
     rocket
         .manage(State { client: Arc::new(onchain), sender })
-        .mount("/", routes![chain_tip, mint_note])
+        .mount("/", routes![chain_tip, mint_note, poll])
         .launch()
         .await
         .unwrap();

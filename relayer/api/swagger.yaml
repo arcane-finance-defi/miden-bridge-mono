@@ -38,7 +38,7 @@ paths:
         Poll the miden light client for the incoming notes with the bridge events
       operationId: pollNotes
       parameters:
-        - name: fromHeight
+        - name: from
           in: query
           description: The start height for the poll
           required: true

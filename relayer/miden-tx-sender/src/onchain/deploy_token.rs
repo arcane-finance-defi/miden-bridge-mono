@@ -21,6 +21,8 @@ pub async fn insert_new_fungible_faucet(
     keystore: &FilesystemKeyStore<StdRng>,
     symbol: &str,
     decimals: u8,
+    origin_network: u64,
+    origin_address: [Felt; 3],
 ) -> Result<(Account, Word), ClientError> {
     let mut rng = rng();
 
@@ -41,7 +43,7 @@ pub async fn insert_new_fungible_faucet(
         .account_type(AccountType::FungibleFaucet)
         .storage_mode(storage_mode)
         .with_component(RpoFalcon512::new(pub_key))
-        .with_component(TokenWrapperAccount::new())
+        .with_component(TokenWrapperAccount::new(origin_network, origin_address))
         .with_component(BasicFungibleFaucet::new(symbol, decimals, MAX_SUPPLY).unwrap())
         .build()?;
 

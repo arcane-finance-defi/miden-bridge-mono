@@ -11,17 +11,10 @@ use miden_objects::note::{
 };
 use miden_objects::transaction::OutputNote;
 use serde::{Deserialize, Serialize};
+use crate::onchain::asset::Asset;
 
 const BRIDGE_USECASE: u16 = 15593;
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(crate = "rocket::serde", rename_all = "camelCase")]
-pub struct Asset {
-    pub origin_network: u32,
-    pub origin_address: String,
-    pub asset_symbol: String,
-    pub decimals: u8,
-}
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(crate = "rocket::serde", rename_all = "camelCase")]

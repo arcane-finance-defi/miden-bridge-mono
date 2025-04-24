@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+alloy-primitives = "1.0.0"
 deadpool-sqlite = { version = "0.9", features = ["rt_tokio_1"] }
 dotenv = "0.15.0"
 eyre = "0.6.12"
