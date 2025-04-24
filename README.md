@@ -1,4 +1,4 @@
-# Miden Bridge
+# Miden Privacy-preserving Crosschain Interoperability Solution
 
 A bridge solution for Miden network, designed to facilitate private token transfers between EVM, and Miden accounts. This bridge serves as an interim solution until the official AggLayer Unified Bridge is launched.
 
