@@ -1,6 +1,6 @@
 # Miden Bridge
 
-A testnet bridge solution for the Miden network, designed to facilitate token transfers between Ethereum Sepolia, Polygon PoS Amoy testnets, and Miden accounts. This bridge serves as an interim solution until the official AggLayer Unified Bridge is launched.
+A bridge solution for Miden network, designed to facilitate private token transfers between EVM, and Miden accounts. This bridge serves as an interim solution until the official AggLayer Unified Bridge is launched.
 
 ## Overview
 
@@ -8,14 +8,16 @@ The Miden Bridge enables users to:
 - Bridge native and ERC-20 tokens from Ethereum Sepolia testnet to Miden accounts
 - Bridge native and ERC-20 tokens from Polygon PoS Amoy testnet to Miden accounts
 - Bridge assets from Miden accounts back to Ethereum Sepolia or Polygon PoS Amoy testnets
+- Maintain privacy during cross-chain transfers through Miden's zero-knowledge technology
 
 ## Features
 
-- Cross-chain token transfers between Ethereum Sepolia and Miden
-- Cross-chain token transfers between Polygon PoS Amoy and Miden
+- Privacy-preserving cross-chain token transfers between Ethereum Sepolia and Miden
+- Privacy-preserving cross-chain token transfers between Polygon PoS Amoy and Miden
 - Support for native tokens and ERC-20 tokens
 - CLI interface for bridging assets from Miden to other networks
 - Integration with Miden wallet for viewing bridged assets
+- Private cross-chain communication leveraging Miden's zero-knowledge technology
 
 ## Prerequisites
 
@@ -56,3 +58,10 @@ npm install
 miden-bridge transfer --network [ethereum-sepolia|polygon-amoy] --token [native|erc20] --amount [amount]
 ```
 
+## Development Status
+
+This bridge is implemented as a simplified solution with the following characteristics:
+- Matches AggLayer's API for future integration
+- Focuses on functionality over security (as it's a temporary solution)
+- Provides basic cross-chain transfer capabilities
+- Enables private cross-chain communication between Miden and EVM chains
