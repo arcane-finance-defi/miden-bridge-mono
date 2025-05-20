@@ -70,12 +70,12 @@ command
 
 ### Miden to EVM
 
-1. Init miden cli with `miden init` command. Create or import your wallet account with asset in vault
-2. Create the crosschain note with `miden crosschain -c <DEST CHAIN ID> -a <DEST ADDRESS> -f <FAUCET ID> -m <AMOUNT> -s <YOUR WALLET ADDRESS>`
-3. Import the faucet account (take from public or ask the bridge team for file)
-4. Call `miden sync`
-5. Consume the crosschain note as usual against the faucet account
-6. Wait for the offchain service execution
+1. Init miden cli with `miden-bridge init` command. Create or import your wallet account with the asset in the vault (for example, the address from EVM -> Miden bridging)
+2. Create the crosschain note with `miden-bridge crosschain -c <DEST CHAIN ID> -a <DEST ADDRESS> -f <FAUCET ID> -m <AMOUNT> -s <MIDEN WALLET ADDRESS>` (Sepolia id is 11155111)
+3. Import the faucet account - ???
+4. Call `miden-bridge sync`
+5. Consume the crosschain note as usual against the faucet account - ???
+6. Wait for the offchain service execution, the balance should update in your EVM wallet
 
 # Developers
 ## Installation
