@@ -37,7 +37,7 @@ Sepolia contracts:
 
 ## Supported assets
 
-- USDC Sepolia ([0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238](https://sepolia.etherscan.io/token/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238)) <=> USDC Miden ([0x4bed401bc24100a0000889fe9cf19d](https://testnet.midenscan.com/account/0x4bed401bc24100a0000889fe9cf19d))
+- USDC Sepolia ([0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238](https://sepolia.etherscan.io/token/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238)) <=> USDC Miden ([0xd354f13600df2920000c682da84a64](https://testnet.midenscan.com/account/0xd354f13600df2920000c682da84a64))
 
 ## How to use
 The client to interact with the bridge is [the modified Miden CLI tool](https://github.com/arcane-finance-defi/miden-bridge-cli) that supports crosschain interactions. You should install it with 
@@ -72,9 +72,9 @@ command
 
 1. Init miden cli with `miden-bridge init` command. Create or import your wallet account with the asset in the vault (for example, the address from EVM -> Miden bridging)
 2. Create the crosschain note with `miden-bridge crosschain -c <DEST CHAIN ID> -a <DEST ADDRESS> -f <FAUCET ID> -m <AMOUNT> -s <MIDEN WALLET ADDRESS>` (Sepolia id is 11155111)
-3. Import the faucet account - ???
+3. Import the faucet account `miden-bridge import-public <FAUCET ADDRESS>`
 4. Call `miden-bridge sync`
-5. Consume the crosschain note as usual against the faucet account - ???
+5. Consume the crosschain note as usual against the faucet account `miden-bridge consume-notes -a <FAUCET ADDRESS> <YOUR NOTE ID frokmstep 2>`
 6. Wait for the offchain service execution, the balance should update in your EVM wallet
 
 # Developers
