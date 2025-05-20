@@ -22,6 +22,7 @@ The Miden Bridge enables users to:
 ## Prerequisites
 
 - Node.js (version X.X.X or higher)
+- Rust ^1.85.0
 - npm or yarn
 - Access to Ethereum Sepolia testnet
 - Access to Polygon PoS Amoy testnet
@@ -37,7 +38,18 @@ git clone [repository-url]
 cd miden-bridge
 
 # Install dependencies
+cd evm
 npm install
+
+cd ../relayer/api
+npm install
+npm run gen
+
+cd ../evm-side
+npm install
+
+cd ../miden-tx-sender
+cargo fetch
 ```
 
 ## Usage
@@ -50,13 +62,6 @@ npm install
 4. Enter the amount
 5. Confirm the transaction
 6. View your bridged assets in your Miden wallet
-
-### Bridging from Miden
-
-```bash
-# Use the CLI to bridge assets from Miden to other networks
-miden-bridge transfer --network [ethereum-sepolia|polygon-amoy] --token [native|erc20] --amount [amount]
-```
 
 ## Development Status
 
@@ -72,6 +77,10 @@ Currently the bridge support the miden testnet with id 9966 and Sepolia testnet 
 Sepolia contracts:
 - MidenBridgeExtension `0x82a888861cd58e18c474c1d3daf8acc502e5e6ea`
 - PolygonBridgeMockProxy `0x77e1099dcc34e82377605a06a6eaa1f68fadc7a5`
+
+## Supported assets
+
+- USDC Sepolia ([0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238](https://sepolia.etherscan.io/token/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238)) <=> USDC Miden ([0x4bed401bc24100a0000889fe9cf19d](https://testnet.midenscan.com/account/0x4bed401bc24100a0000889fe9cf19d))
 
 The client is [the modificated Miden CLI tool](https://github.com/arcane-finance-defi/miden-bridge-cli) that supports crosschain interactions. You should install it with 
 
