@@ -77,3 +77,38 @@ command
 5. Consume the crosschain note as usual against the faucet account `miden-bridge consume-notes -a <FAUCET ADDRESS> <YOUR NOTE ID frokmstep 2>`
 6. Wait for the offchain service execution, the balance should update in your EVM wallet
 
+### Mixer
+
+1. Init miden cli with `miden-bridge init` command. Create or import your wallet account with the asset in the vault (for example, the address from EVM -> Miden bridging)
+2. Generate the recipient to the wallet address `miden-bridge recipient --note-type crosschain --dest-chain 11155111 --dest-address <RECEIVER EVM ADDRESS>`. Recepient, BRIDGE Serial number, and Serial number will be printed to the console, remember them.
+3. Approve Sepolia USDC for the `MidenBridgeExtension` contract on Sepolia, you can get some on Sepolia Uniswap. The approval can be done in any convenient way, we suggest using a Foundry tool `cast`.
+```cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR PRIVATE KEY> -f <YOUR ADDRESS> 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "approve(address,uint256)" 0x82a888861cd58e18c474c1d3daf8acc502e5e6ea <AMOUNT>)"```
+4. Execute [bridgeAndCall](https://github.com/arcane-finance-defi/miden-bridge-evm/blob/488339116ac24b389e48d08d6967dcaffb06db8e/src/MidenBridgeExtension.sol#L39) method of the `MidenBridgeExtension` contract. Use the recipient as the calldata. Set the destination chain param to miden id `9966` and set all addreses to zero (0x0000000000000000000000000000000000000000)
+```cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR PRIVATE KEY> -f <YOUR ADDRESS> 0x82a888861cd58e18c474c1d3daf8acc502e5e6ea "bridgeAndCall(address,uint256,uint32,address,address,bytes,bool)" 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 <AMOUNT> 9966 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 <YOUR RECIPIENT> false)"```
+5. Provide the intermediate note to the mixer offchain service `miden-bridge mix --serial-number <SERIAL NUMBER> --bridge-serial-number <BRIDGE SERIAL NUMBER> --dest-chain 11155111 --dest-address <RECEIVER EVM ADDRESS> --faucet-id 0xd354f13600df2920000c682da84a64 --asset-amount <AMOUNT>`
+6. Wait for the offchain service execution, the balance should update in your EVM wallet
+
+# Developers
+## Installation
+
+```bash
+# Clone the repository
+git clone [repository-url]
+
+# Navigate to the project directory
+cd miden-bridge-mono
+
+# Install dependencies
+cd evm
+npm install
+
+cd ../relayer/api
+npm install
+npm run gen
+
+cd ../evm-side
+npm install
+
+cd ../miden-tx-sender
+cargo fetch
+```
