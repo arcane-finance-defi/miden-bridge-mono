@@ -599,7 +599,6 @@ dependencies = [
  "miden-assembly",
  "miden-lib",
  "miden-objects",
- "miden-processor",
  "miden-prover",
  "miden-stdlib",
  "miden-tx",
