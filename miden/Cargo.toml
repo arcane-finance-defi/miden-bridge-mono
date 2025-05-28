@@ -15,13 +15,11 @@ testing = ["miden-objects/testing", "miden-tx/testing", "miden-lib/testing"]
 with-debug-info = ["miden-stdlib/with-debug-info"]
 
 [dependencies]
-miden-lib = { version = "0.8.0" }
-miden-objects = { version = "0.8.1"}
-regex = { version = "1.10" }
-walkdir = { version = "2.5" }
-miden-assembly = "^0.13.0"
-miden-stdlib = "^0.13.0"
-miden-tx = { version = "0.8.1"}
+miden-lib = { version = "0.8.0", default-features = false }
+miden-objects = { version = "0.8.1", default-features = false }
+miden-assembly = { version = "^0.13.0", default-features = false }
+miden-stdlib = { version = "^0.13.0", default-features = false }
+miden-tx = { version = "0.8.1", default-features = false }
 thiserror = "2.0.12"
 
 [dev-dependencies]
