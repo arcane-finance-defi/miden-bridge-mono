@@ -1,0 +1,107 @@
+prompt() {
+    echo -n "$1
+> "
+    read -r prompt_result
+    echo ""
+}
+
+describe_evm_tx() {
+    echo "EVM tx with id $1 submited"
+    echo "You could find it in explorer https://sepolia.etherscan.io/tx/$1"
+    echo ""
+}
+
+SEPOLIA_RPC_URL="https://ethereum-sepolia-rpc.publicnode.com"
+EVM_MINIMUM_ALLOWED_BALANCE=10000000000000000
+USDC_EVM_ADDRESS="0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
+USDC_MIDEN_ADDRESS="0xd354f13600df2920000c682da84a64"
+BRIDGE_EVM_ADDRESS="0x1ca41f72bc07DbEb85e059e18cb9DF9781fDC1F3"
+
+evm_to_miden() {
+    if [[ ! -e "miden-client.toml" ]]; then
+        miden-bridge init
+    fi
+
+    prompt "Put your evm private key"
+    privatekey=$prompt_result
+    address=$(cast wallet address --private-key $privatekey)
+    balance=$(cast balance $address --rpc-url $SEPOLIA_RPC_URL)
+    formated_balance=$(cast to-unit $balance ether)
+
+    usdc_balance=$(cast balance $address --rpc-url $SEPOLIA_RPC_URL --erc20 $USDC_EVM_ADDRESS | awk '{print $1}')
+    formated_usdc_balance=$(echo "scale=2 ; $usdc_balance / 1000000" | bc )
+    echo "Working with evm address: $address with $formated_balance ETH and $formated_usdc_balance USDC"
+
+    if (( $balance < $EVM_MINIMUM_ALLOWED_BALANCE )); then
+        echo "Account ETH balance too low"
+        exit 1
+    fi
+    
+    receiver=$(miden-bridge account -d 2>/dev/null | grep -o "0x[0-9a-f]*")
+
+    if [[ -z $receiver ]]; then
+        miden-bridge new-wallet &>/dev/null
+        receiver=$(miden-bridge account -d 2>/dev/null | grep -o "0x[0-9a-f]*")
+    fi
+
+    echo "Miden receiver address: $receiver"
+
+    prompt "How much USDC you want to transfer?"
+    formated_amount=$prompt_result
+    amount=$(( $formated_amount * 1000000 ))
+
+    if (( $usdc_balance < $amount )); then
+        echo "Too low usdc balance"
+        exit 1
+    fi
+
+    echo "Approval transaction generation"
+    tx_id=$(cast publish --async -r $SEPOLIA_RPC_URL "$(cast mktx -r $SEPOLIA_RPC_URL --private-key $privatekey -f $address $USDC_EVM_ADDRESS "approve(address,uint256)" $BRIDGE_EVM_ADDRESS $amount)")
+    describe_evm_tx $tx_id
+
+    sleep 40
+
+    recipient_response=$(miden-bridge recipient -a $receiver)
+    echo $recipient_response
+    recipient=$(echo "$recipient_response" | grep -o "0x[0-9a-f]*" | head -n 1)
+    serial_number=$(echo "$recipient_response" | grep -o "0x[0-9a-f]*" | tail -n 1)
+
+    echo "Bridge transaction generation"
+    tx_id=$(cast publish --async -r $SEPOLIA_RPC_URL "$(cast mktx -r $SEPOLIA_RPC_URL --private-key $privatekey -f $address $BRIDGE_EVM_ADDRESS "bridgeAndCall(address,uint256,uint32,address,address,bytes,bool)" $USDC_EVM_ADDRESS $amount 9966 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 $recipient false)")
+    describe_evm_tx $tx_id
+
+    for i in {1..5}; do
+        echo "Waiting for relayer..."
+        sleep 90
+
+        reconstruct_output=$(miden-bridge reconstruct --serial-number $serial_number --account-id $receiver --asset-amount $amount --faucet-id $USDC_MIDEN_ADDRESS 2>/dev/null)
+
+        if [[ "$?" == "0" ]]; then
+            reconstructed_note_id=$(echo "$reconstruct_output" | grep -o "Reconstructed note id: 0x[0-9a-f]*" | grep -o "0x[0-9a-f]*")
+            miden-bridge consume-notes -a $receiver $reconstructed_note_id
+
+            break
+        else
+            echo "Bridging still in progress"
+        fi
+    done
+
+    echo "Bridging to miden finished!"
+}
+
+prompt "Choose the bridge direction:
+    1) EVM->Miden
+    2) Miden->EVM"
+
+direction=$prompt_result
+
+if [[ "$direction" == "1" ]]; then
+    evm_to_miden
+elif [[ "$direction" == "2" ]]; then
+    echo "Miden to EVM"
+    echo "Not implemented yet!"
+    exit 1
+else
+    echo "Unknown option. Acceptable options: 1|2"
+    exit 1
+fi
