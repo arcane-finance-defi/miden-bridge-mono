@@ -13,7 +13,7 @@ use miden_objects::transaction::OutputNote;
 use serde::{Deserialize, Serialize};
 use crate::onchain::asset::Asset;
 
-const BRIDGE_USECASE: u16 = 15593;
+const BRIDGE_USECASE: u16 = 14594;
 
 
 #[derive(Debug, Deserialize, Serialize)]
