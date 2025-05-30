@@ -57,7 +57,7 @@ command
 
 1. Init miden cli with `miden-bridge init` command
 2. Generate the wallet with `miden-bridge new-wallet`. It will print "Setting account <YOUR MIDEN ADDRESS> as the default account ID." to the console, remember your address.
-3. Generate the recipient to the wallet address `miden-bridge recipient -a <YOUR MIDEN ADDRESS>`. Both Recepient and Serial number will be printed to the console, remember them.
+3. Generate the recipient to the wallet address `miden-bridge recipient -a <YOUR MIDEN ADDRESS>`. Both Recepient and Serial number will be printed to the console, remember them. Note that you can only bridge to the given recepient once.
 4. Approve Sepolia USDC for the `MidenBridgeExtension` contract on Sepolia, you can get some on Sepolia Uniswap. The approval can be done in any convenient way, we suggest using a Foundry tool `cast`.
 ```cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR EVM PRIVATE KEY> -f <YOUR EVM ADDRESS> 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "approve(address,uint256)" 0x1ca41f72bc07DbEb85e059e18cb9DF9781fDC1F3 <AMOUNT>)"```
 5. Execute [bridgeAndCall](https://github.com/arcane-finance-defi/miden-bridge-evm/blob/488339116ac24b389e48d08d6967dcaffb06db8e/src/MidenBridgeExtension.sol#L39) method of the `MidenBridgeExtension` contract. Use the recipient as the calldata. Set the destination chain param to miden id `9966` and set all addreses to zero (0x0000000000000000000000000000000000000000)
