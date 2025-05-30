@@ -119,7 +119,7 @@ fn restore_note(
         note.recipient().clone(),
     );
 
-    const BRIDGE_USECASE: u16 = 15593;
+    const BRIDGE_USECASE: u16 = 14594;
 
     let note_text = NoteFile::NoteDetails {
         details: note_details,
