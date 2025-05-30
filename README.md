@@ -32,8 +32,8 @@ This bridge is implemented as a simplified solution with the following character
 Currently the bridge supports Miden testnet (chain_id=9966) and Sepolia testnet (chain_id=11155111)
 
 Sepolia contracts:
-- MidenBridgeExtension `0x82a888861cd58e18c474c1d3daf8acc502e5e6ea`
-- PolygonBridgeMockProxy `0x77e1099dcc34e82377605a06a6eaa1f68fadc7a5`
+- MidenBridgeExtension `0x1ca41f72bc07DbEb85e059e18cb9DF9781fDC1F3`
+- PolygonBridgeMockProxy `0x10371D387650F003c48f35125fa71B3906c62795`
 
 ## Supported assets
 
@@ -59,9 +59,9 @@ command
 2. Generate the wallet with `miden-bridge new-wallet`. It will print "Setting account <YOUR MIDEN ADDRESS> as the default account ID." to the console, remember your address.
 3. Generate the recipient to the wallet address `miden-bridge recipient -a <YOUR MIDEN ADDRESS>`. Both Recepient and Serial number will be printed to the console, remember them.
 4. Approve Sepolia USDC for the `MidenBridgeExtension` contract on Sepolia, you can get some on Sepolia Uniswap. The approval can be done in any convenient way, we suggest using a Foundry tool `cast`.
-```cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR EVM PRIVATE KEY> -f <YOUR EVM ADDRESS> 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "approve(address,uint256)" 0x82a888861cd58e18c474c1d3daf8acc502e5e6ea <AMOUNT>)"```
+```cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR EVM PRIVATE KEY> -f <YOUR EVM ADDRESS> 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "approve(address,uint256)" 0x1ca41f72bc07DbEb85e059e18cb9DF9781fDC1F3 <AMOUNT>)"```
 5. Execute [bridgeAndCall](https://github.com/arcane-finance-defi/miden-bridge-evm/blob/488339116ac24b389e48d08d6967dcaffb06db8e/src/MidenBridgeExtension.sol#L39) method of the `MidenBridgeExtension` contract. Use the recipient as the calldata. Set the destination chain param to miden id `9966` and set all addreses to zero (0x0000000000000000000000000000000000000000)
-```cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR EVM PRIVATE KEY> -f <YOUR EVM ADDRESS> 0x82a888861cd58e18c474c1d3daf8acc502e5e6ea "bridgeAndCall(address,uint256,uint32,address,address,bytes,bool)" 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 <AMOUNT> 9966 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 <YOUR RECIPIENT> false)"```
+```cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR EVM PRIVATE KEY> -f <YOUR EVM ADDRESS> 0x1ca41f72bc07DbEb85e059e18cb9DF9781fDC1F3 "bridgeAndCall(address,uint256,uint32,address,address,bytes,bool)" 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 <AMOUNT> 9966 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 <YOUR RECIPIENT> false)"```
 6. Find Miden token wrapper address for your EVM token (for Sepolia USDC it's 0x4bed401bc24100a0000889fe9cf19d), this wrapper address is also a FAUCET_ID for the next step.
 7. Call `miden-bridge sync`
 8. Reconstruct the resulting note with `miden-bridge reconstruct --serial-number <SERIAL NUMBER from step 3> --account-id <YOUR ADDRESS from step 2> --asset-amount <AMOUNT from step 5> --faucet-id <FAUCET ID from step 6>`. It will reconstruct P2ID note in your storage and print a note id, remember it for step 10.
