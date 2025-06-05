@@ -88,6 +88,22 @@ command
 5. Provide the intermediate note to the mixer offchain service `miden-bridge mix --serial-number <SERIAL NUMBER> --bridge-serial-number <BRIDGE SERIAL NUMBER> --dest-chain 11155111 --dest-address <RECEIVER EVM ADDRESS> --faucet-id 0xd354f13600df2920000c682da84a64 --asset-amount <AMOUNT>`
 6. Wait for the offchain service execution, the balance should update in your EVM wallet
 
+# Script
+
+You could use the script for the testing purposes.
+
+`bash -c ./bridge.sh`
+
+Script supports the bridging and mixing features.
+
+## Bridging
+
+On script start select 1 or 2 option for the bridge usage. The script collects the required data interactively
+
+## Mixing
+
+Ensure you installed the latest miden-bridge CLI revision. Select option 3 in script scenario
+
 # Developers
 ## Installation
 
