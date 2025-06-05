@@ -23,9 +23,9 @@ miden-tx = { version = "0.8.1", default-features = false }
 thiserror = "2.0.12"
 
 [dev-dependencies]
-miden-lib = { version = "0.8.0" }
-miden-objects = { version = "0.8.1", features = ["testing"] }
-miden-tx = { version = "0.8.1", features = ["testing"]}
+miden-lib = { version = "0.8.0", default-features = false }
+miden-objects = { version = "0.8.1", features = ["testing"], default-features = false }
+miden-tx = { version = "0.8.1", features = ["testing"], default-features = false }
 miden-prover = { version = "^0.13.0", default-features = false }
 winter-maybe-async = { version = "0.12" }
 rand_chacha = "0.9.0"
@@ -34,10 +34,10 @@ rand_chacha = "0.9.0"
 [build-dependencies]
 regex = { version = "1.10" }
 walkdir = { version = "2.5" }
-miden-assembly = { version = "^0.13.0", features = ["std"] }
-miden-stdlib = "^0.13.0"
-miden-lib = { version = "0.8.0" }
-miden-objects = { version = "0.8.1" }
+miden-assembly = { version = "^0.13.0", features = ["std"], default-features = false }
+miden-stdlib = { version = "^0.13.0", default-features = false }
+miden-lib = { version = "0.8.0", default-features = false }
+miden-objects = { version = "0.8.1", default-features = false }
 
 [profile.test-release]
 inherits = "release"
