@@ -37,6 +37,7 @@ const ACCOUNT_ERRORS_FILE: &str = "src/errors/account_errors.rs";
 fn main() -> Result<()> {
     // re-build when the MASM code changes
     println!("cargo:rerun-if-changed={ASM_DIR}");
+    println!("cargo::rerun-if-env-changed=BUILD_GENERATED_FILES_IN_SRC");
     
     // Copies the MASM code to the build directory
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
