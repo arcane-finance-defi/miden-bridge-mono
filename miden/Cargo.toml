@@ -33,7 +33,7 @@ rand_chacha = "0.9.0"
 [build-dependencies]
 regex = { version = "1.10" }
 walkdir = { version = "2.5" }
-miden-assembly = { version = "^0.13.0", features = ["std"], default-features = false }
+miden-assembly = { version = "^0.13.0", default-features = false }
 miden-stdlib = { version = "^0.13.0", default-features = false }
 miden-lib = { version = "0.8.0", default-features = false }
 miden-objects = { version = "0.8.1", default-features = false }
