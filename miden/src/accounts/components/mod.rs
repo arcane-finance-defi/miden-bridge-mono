@@ -1,5 +1,5 @@
-use miden_assembly::{
-    Library,
+use miden_objects::{
+    assembly::Library,
     utils::{sync::LazyLock, Deserializable}
 };
 
