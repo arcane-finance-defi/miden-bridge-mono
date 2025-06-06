@@ -2,7 +2,7 @@
 name = "miden-bridge"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.82"
+rust-version = "1.87"
 
 [lib]
 
@@ -15,28 +15,29 @@ testing = ["miden-objects/testing", "miden-tx/testing", "miden-lib/testing"]
 with-debug-info = ["miden-stdlib/with-debug-info"]
 
 [dependencies]
-miden-lib = { version = "0.8.0", default-features = false }
-miden-objects = { version = "0.8.1", default-features = false }
-miden-stdlib = { version = "^0.13.0", default-features = false }
-miden-tx = { version = "0.8.1", default-features = false }
+miden-lib = { version = "0.9.0", default-features = false }
+miden-objects = { version = "0.9.1", default-features = false }
+miden-stdlib = { version = "^0.14.0", default-features = false }
+miden-tx = { version = "0.9.0", default-features = false }
 thiserror = "2.0.12"
 
 [dev-dependencies]
-miden-lib = { version = "0.8.0", default-features = false }
-miden-objects = { version = "0.8.1", features = ["testing"], default-features = false }
-miden-tx = { version = "0.8.1", features = ["testing"], default-features = false }
-miden-prover = { version = "^0.13.0", default-features = false }
+miden-lib = { version = "0.9.0", default-features = false }
+miden-objects = { version = "0.9.1", features = ["testing"], default-features = false }
+miden-tx = { version = "0.9.0", features = ["testing"], default-features = false }
+miden-prover = { version = "^0.14.0", default-features = false }
 winter-maybe-async = { version = "0.12" }
 rand_chacha = "0.9.0"
+miden-testing = "0.9.0"
 
 
 [build-dependencies]
 regex = { version = "1.10" }
 walkdir = { version = "2.5" }
-miden-assembly = { version = "^0.13.0", default-features = false }
-miden-stdlib = { version = "^0.13.0", default-features = false }
-miden-lib = { version = "0.8.0", default-features = false }
-miden-objects = { version = "0.8.1", default-features = false }
+miden-assembly = { version = "^0.14.0", default-features = false }
+miden-stdlib = { version = "^0.14.0", default-features = false }
+miden-lib = { version = "0.9.0", default-features = false }
+miden-objects = { version = "0.9.1", default-features = false }
 
 [profile.test-release]
 inherits = "release"

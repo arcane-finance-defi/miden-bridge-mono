@@ -55,6 +55,27 @@ impl From<TokenWrapperAccount> for AccountComponent {
     }
 }
 
+fn builder_internal(
+    init_seed: [u8; 32],
+    id_anchor: AccountIdAnchor,
+    symbol: TokenSymbol,
+    decimals: u8,
+    max_supply: Felt,
+    origin_network: u64,
+    origin_address: [Felt; 3],
+    account_storage_mode: AccountStorageMode
+) -> Result<AccountBuilder, AccountError> {
+
+    Ok(AccountBuilder::new(init_seed)
+        .anchor(id_anchor)
+        .account_type(AccountType::FungibleFaucet)
+        .storage_mode(account_storage_mode)
+        .with_component(TokenWrapperAccount::new(origin_network, origin_address))
+        .with_component(BasicFungibleFaucet::new(symbol, decimals, max_supply)
+            .map_err(AccountError::FungibleFaucetError)?)
+    )
+}
+
 pub fn create_token_wrapper_account(
     init_seed: [u8; 32],
     id_anchor: AccountIdAnchor,
@@ -70,14 +91,39 @@ pub fn create_token_wrapper_account(
         AuthScheme::RpoFalcon512 { pub_key } => RpoFalcon512::new(pub_key),
     };
 
-    let (account, account_seed) = AccountBuilder::new(init_seed)
-        .anchor(id_anchor)
-        .account_type(AccountType::FungibleFaucet)
-        .storage_mode(account_storage_mode)
-        .with_component(auth_component)
-        .with_component(TokenWrapperAccount::new(origin_network, origin_address))
-        .with_component(BasicFungibleFaucet::new(symbol, decimals, max_supply)?)
-        .build()?;
+    let (account, account_seed) = builder_internal(
+        init_seed,
+        id_anchor,
+        symbol,
+        decimals,
+        max_supply,
+        origin_network,
+        origin_address,
+        account_storage_mode
+    )?.with_component(auth_component).build()?;
 
     Ok((account, account_seed))
+}
+
+#[cfg(any(feature = "testing", test))]
+pub fn create_token_wrapper_account_builder(
+    init_seed: [u8; 32],
+    id_anchor: AccountIdAnchor,
+    symbol: TokenSymbol,
+    decimals: u8,
+    max_supply: Felt,
+    origin_network: u64,
+    origin_address: [Felt; 3],
+    account_storage_mode: AccountStorageMode,
+) -> Result<AccountBuilder, AccountError> {
+    builder_internal(
+        init_seed,
+        id_anchor,
+        symbol,
+        decimals,
+        max_supply,
+        origin_network,
+        origin_address,
+        account_storage_mode
+    )
 }
