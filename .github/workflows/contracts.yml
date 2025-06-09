@@ -21,8 +21,8 @@ jobs:
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: miden/target/release/build/miden-bridge-*/out/assets/**/*.masb
         tag: ${{ github.ref }}
         overwrite: true
         file_glob: true
+        promote: true
