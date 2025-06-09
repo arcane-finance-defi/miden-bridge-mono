@@ -1,0 +1,28 @@
+name: Rust
+
+on:
+  release:
+    types: [created]
+
+defaults:
+  run:
+    working-directory: ./miden
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-cnotracts:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      run: cargo build --verbose --release
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/release/miden-bridge/assets/**/*.masb
+        tag: ${{ github.ref }}
+        overwrite: true
+        file_glob: true
