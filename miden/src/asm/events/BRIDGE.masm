@@ -7,7 +7,7 @@ const.MIN_INPUTS_COUNT=12
 # =================================================================================================
 
 # BRIDGE too low inputs count
-const.ERR_BRIDGE_WRONG_NUMBER_OF_INPUTS="Wrong number of note inputs"
+const.ERR_BRIDGE_WRONG_NUMBER_OF_INPUTS=0x0002d001
 
 #! BRIDGE script: do nothing. Holds relayer event data in its inputs
 #!

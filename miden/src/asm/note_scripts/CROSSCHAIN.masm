@@ -7,10 +7,10 @@ use.std::sys
 # =================================================================================================
 
 # CROSSCHAIN script expects gte 12 note inputs
-const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_INPUTS="Should contain at least 12 inputs"
+const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_INPUTS=0x0003b000
 
 # CROSSCHAIN script expects exactly 1 asset
-const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_ASSETS="Should contain exactly 1 asset"
+const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_ASSETS=0x0003b001
 
 
 # CONSTANTS
