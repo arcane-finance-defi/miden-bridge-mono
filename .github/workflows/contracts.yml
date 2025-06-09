@@ -12,7 +12,9 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-cnotracts:
+  build-contracts:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
