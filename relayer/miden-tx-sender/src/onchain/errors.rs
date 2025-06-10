@@ -2,7 +2,7 @@ use miden_client::ClientError;
 use miden_client::rpc::RpcError;
 use miden_client::store::StoreError;
 use miden_client::transaction::{TransactionProverError, TransactionRequestError};
-use miden_objects::{AccountError, AssetError, NoteError};
+use miden_objects::{AccountError, AssetError, FungibleFaucetError, NoteError, TokenSymbolError};
 use miden_objects::account::AccountId;
 use thiserror::Error;
 use crate::utils::errors::AddressFormatError;
@@ -27,6 +27,10 @@ pub enum OnchainError {
     StoreError(#[from] StoreError),
     #[error(transparent)]
     AddressFormatError(#[from] AddressFormatError),
+    #[error(transparent)]
+    TokenSymbolError(#[from] TokenSymbolError),
+    #[error(transparent)]
+    FungibleFaucetError(#[from] FungibleFaucetError),
     #[error("Account with id {0} not found in storage")]
     AccountNotFoundInStorage(AccountId),
 }

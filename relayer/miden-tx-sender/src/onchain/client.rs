@@ -164,7 +164,15 @@ pub fn client_process_loop(
 
     let rng = RpoRandomCoin::new(coin_seed.map(Felt::new));
     let mut execution_client =
-        Client::new(client.rpc.clone(), Box::new(rng), miden_client_store, keystore.clone(), false);
+        Client::new(
+            client.rpc.clone(),
+            Box::new(rng),
+            miden_client_store,
+            keystore.clone(),
+            false,
+            None,
+            None
+        );
 
     runtime.block_on(execution_client.sync_state()).unwrap();
 

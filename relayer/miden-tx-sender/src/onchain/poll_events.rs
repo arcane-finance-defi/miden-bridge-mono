@@ -87,21 +87,21 @@ pub async fn poll_events(
                 receiver_felts[0],
             ]).unwrap();
 
-            ExitEvent {
+            Ok(ExitEvent {
                 note_id: event.id().to_hex(),
                 block_number: block_number.clone().as_u32(),
                 asset: Asset {
                     origin_address,
                     origin_network,
                     decimals,
-                    asset_symbol: symbol.to_str()
+                    asset_symbol: symbol.to_string()?
                 },
                 receiver: receiver_address.to_hex_with_prefix(),
                 destination_chain: event.details().inputs().values()[4].as_int(),
                 amount: event.details().inputs().values()[0].as_int(),
                 call_data: None,
                 call_address: None,
-            }
-        }).collect()
+            })
+        }).collect::<Result<Vec<ExitEvent>, OnchainError>>()?
     })
 }

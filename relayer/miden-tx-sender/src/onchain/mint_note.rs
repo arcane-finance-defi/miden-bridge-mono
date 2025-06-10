@@ -63,22 +63,3 @@ pub async fn mint_asset(
 
     Ok(transaction)
 }
-
-pub async fn mint_fungible_asset(
-    execution_client: &mut Client,
-    faucet_id: AccountId,
-    recipient: AccountId,
-    amount: u64,
-) -> Result<TransactionResult, OnchainError> {
-    let tx_request = TransactionRequestBuilder::mint_fungible_asset(
-        FungibleAsset::new(faucet_id, amount)?,
-        recipient,
-        NoteType::Private,
-        execution_client.rng(),
-    )?
-    .build()?;
-
-    let transaction = execute_tx(execution_client, tx_request, faucet_id).await?;
-
-    Ok(transaction)
-}

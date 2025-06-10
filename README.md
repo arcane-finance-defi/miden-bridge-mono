@@ -37,7 +37,7 @@ Sepolia contracts:
 
 ## Supported assets
 
-- USDC Sepolia ([0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238](https://sepolia.etherscan.io/token/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238)) <=> USDC Miden ([0xd354f13600df2920000c682da84a64](https://testnet.midenscan.com/account/0xd354f13600df2920000c682da84a64))
+- USDC Sepolia ([0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238](https://sepolia.etherscan.io/token/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238)) <=> USDC Miden ([0x26aecb8cedb6ae2000017fbe133eed](https://testnet.midenscan.com/account/0x26aecb8cedb6ae2000017fbe133eed))
 
 ## How to use
 The client to interact with the bridge is [the modified Miden CLI tool](https://github.com/arcane-finance-defi/miden-bridge-cli) that supports crosschain interactions. You should install it with 

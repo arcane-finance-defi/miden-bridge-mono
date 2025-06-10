@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use crate::config::Config;
 use crate::onchain::client::{client_process_loop, ClientCommand};
-use crate::onchain::mint_note::{mint_asset, mint_fungible_asset, MintArgs, MintedNote};
+use crate::onchain::mint_note::{mint_asset, MintArgs, MintedNote};
 use crate::onchain::OnchainClient;
 use dotenv::dotenv;
 use miden_bridge::accounts::token_wrapper::TokenWrapperAccount;
