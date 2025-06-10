@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use miden_assembly::diagnostics::IntoDiagnostic;
 use miden_assembly::Report;
+use miden_lib::account::auth::RpoFalcon512;
 use miden_lib::AuthScheme;
 use miden_lib::transaction::TransactionKernel;
 use miden_objects::account::{AccountId, AccountIdAnchor, AccountStorageMode, AuthSecretKey};
@@ -13,10 +14,10 @@ use miden_objects::testing::account_id::ACCOUNT_ID_SENDER;
 use miden_objects::transaction::{OutputNote, TransactionScript};
 use miden_objects::utils::word_to_masm_push_string;
 use miden_tx::auth::BasicAuthenticator;
-use miden_tx::testing::{MockChain, TransactionContextBuilder};
+use miden_testing::{AccountState, Auth, MockChain, TransactionContextBuilder};
 use rand_chacha::ChaCha20Rng;
 use rand_chacha::rand_core::SeedableRng;
-use miden_bridge::accounts::token_wrapper::{bridge_note_tag, create_token_wrapper_account};
+use miden_bridge::accounts::{token_wrapper::bridge_note_tag, testing::create_token_wrapper_account_builder};
 use miden_bridge::notes::bridge::{bridge, croschain};
 use crate::common::executor::execute_with_debugger;
 
@@ -44,15 +45,7 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
         Felt::new(4)
     ]);
 
-    let wrapper_authenticator = &BasicAuthenticator::new_with_rng(
-        &[(
-            Word::from(pub_key),
-            secret_key
-        )],
-        ChaCha20Rng::from_os_rng()
-    );
-
-    let (mut wrapper, wrapper_seed) = create_token_wrapper_account(
+    let wrapper_builder = create_token_wrapper_account_builder(
         [1; 32],
         AccountIdAnchor::new(
             anchor_block_id,
@@ -63,9 +56,19 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
         Felt::new(1000000),
         1,
         [Felt::new(1),Felt::new(1),Felt::new(1)],
-        AccountStorageMode::Private,
-        AuthScheme::RpoFalcon512 { pub_key: pub_key.clone() },
+        AccountStorageMode::Public,
     ).into_diagnostic()?;
+
+    wrapper_builder.clone()
+        .with_component(RpoFalcon512::new(pub_key))
+        .build()
+        .into_diagnostic()?;
+
+    let mut wrapper = mock_chain.add_pending_account_from_builder(
+        Auth::BasicAuth,
+        wrapper_builder,
+        AccountState::Exists
+    );
 
 
     let fungible_asset =
@@ -127,14 +130,12 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
         )
     );
 
-    mock_chain.add_pending_note(note.clone());
-    mock_chain.add_pending_account(wrapper.clone());
-
-    mock_chain.seal_next_block();
+    mock_chain.add_pending_note(OutputNote::Full(note.clone()));
+    mock_chain.prove_next_block();
 
     let mint_tx_inputs = mock_chain.get_transaction_inputs(
         wrapper.clone(),
-        Some(wrapper_seed),
+        None,
         &[],
         &[]
     );
@@ -175,18 +176,19 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
         TransactionScript::compile(mint_tx_script_code, vec![], TransactionKernel::testing_assembler())
             .into_diagnostic()?;
 
-    let executed_mint_transaction = execute_with_debugger(
-        TransactionContextBuilder::new(wrapper.clone())
-            .tx_script(mint_tx_script)
-            .tx_inputs(mint_tx_inputs)
-            .account_seed(Some(wrapper_seed))
-            .authenticator(Some(wrapper_authenticator.clone()))
-            .build(),
-        Some(Arc::new(wrapper_authenticator.clone()))
-    ).into_diagnostic()?;
+    let executed_mint_transaction = mock_chain.build_tx_context(
+        wrapper.clone(),
+        &[],
+        &[]
+    )
+        .tx_script(mint_tx_script)
+        .tx_inputs(mint_tx_inputs)
+        .build()
+        .execute()
+        .into_diagnostic()?;
 
-    mock_chain.apply_executed_transaction(&executed_mint_transaction.clone());
-    mock_chain.seal_next_block();
+    mock_chain.add_pending_executed_transaction(&executed_mint_transaction.clone());
+    mock_chain.prove_next_block();
 
     wrapper.apply_delta(&executed_mint_transaction.account_delta().clone()).into_diagnostic()?;
 
@@ -237,12 +239,16 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
         );
 
 
-    let executed_transaction = execute_with_debugger(
-        TransactionContextBuilder::new(wrapper).account_seed(Some(wrapper_seed))
-            .tx_inputs(tx_inputs)
-            .expected_notes(vec![OutputNote::Full(expected_note)]).build(),
-        None
-    ).into_diagnostic()?;
+    let executed_transaction = mock_chain.build_tx_context(
+        wrapper.clone(),
+        &[],
+        &[]
+    )
+        .tx_inputs(tx_inputs)
+        .expected_notes(vec![OutputNote::Full(expected_note)])
+        .build()
+        .execute()
+        .into_diagnostic()?;
 
     assert_eq!(executed_transaction.output_notes().num_notes(), 1);
     assert_eq!(executed_transaction.output_notes().get_note(0).metadata().tag(), bridge_note_tag());
