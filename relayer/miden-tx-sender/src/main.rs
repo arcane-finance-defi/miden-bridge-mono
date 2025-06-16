@@ -6,6 +6,7 @@ mod onchain;
 mod store;
 mod utils;
 
+use std::error::Error;
 use rocket::State as RocketState;
 use std::sync::Arc;
 
@@ -41,6 +42,7 @@ use rocket::http::Status;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::{Receiver, Sender};
+use log::warn;
 use crate::onchain::poll_events::PolledEvents;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -72,9 +74,13 @@ async fn mint_note(
     match rx.await {
         Ok(Ok(mint_result)) => Ok(Json(mint_result)),
         Ok(Err(e)) => {
+            warn!("{}, source: {}", e, e.source().unwrap().to_string());
             Err((Status::InternalServerError, Json(ErrorResponse { error: e.to_string() })))
         },
-        Err(e) => Err((Status::InternalServerError, Json(ErrorResponse { error: e.to_string() }))),
+        Err(e) => {
+            warn!("{}, source: {}", e, e.source().unwrap().to_string());
+            Err((Status::InternalServerError, Json(ErrorResponse { error: e.to_string() })))
+        },
     }
 }
 
