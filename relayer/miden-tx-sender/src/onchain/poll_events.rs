@@ -35,7 +35,6 @@ pub async fn poll_events(
     storage_client: &mut Client,
     from: BlockNumber
 ) -> Result<PolledEvents, OnchainError> {
-    storage_client.add_note_tag(bridge_note_tag()).await.map_err(OnchainError::from)?;
     storage_client.sync_state().await.map_err(OnchainError::from)?;
 
     let notes = storage_client.get_input_notes(NoteFilter::Committed)

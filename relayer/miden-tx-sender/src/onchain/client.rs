@@ -18,6 +18,7 @@ use rand::rngs::StdRng;
 use rand::Rng;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use miden_bridge::accounts::token_wrapper::bridge_note_tag;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender as OneshotSender;
@@ -174,6 +175,7 @@ pub fn client_process_loop(
             None
         );
 
+    runtime.block_on(execution_client.add_note_tag(bridge_note_tag())).unwrap();
     runtime.block_on(execution_client.sync_state()).unwrap();
 
     loop {

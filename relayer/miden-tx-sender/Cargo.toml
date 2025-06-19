@@ -21,3 +21,6 @@ serde_json = "1.0"
 thiserror = "2.0.12"
 tokio = "1.44.1"
 log = "0.4.27"
+
+[patch.crates-io]
+miden-client = { git = "https://github.com/slon2015/miden-client", branch = "fix/sync-notes-by-tag" }
