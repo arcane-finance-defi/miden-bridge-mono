@@ -25,7 +25,7 @@ BRIDGE_EVM_ADDRESS="0x1ca41f72bc07DbEb85e059e18cb9DF9781fDC1F3"
 
 evm_to_miden() {
     if [[ ! -e "miden-client.toml" ]]; then
-        miden-bridge init -n testnet
+        miden-bridge init --network testnet
     fi
 
     prompt "Put your evm private key"
@@ -97,7 +97,7 @@ evm_to_miden() {
 
 mixing() {
     if [[ ! -e "miden-client.toml" ]]; then
-        miden-bridge init
+        miden-bridge init --network testnet
     fi
 
     prompt "Put your evm private key"
