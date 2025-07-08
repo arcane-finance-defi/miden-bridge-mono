@@ -9,7 +9,8 @@ pub fn new_crosschain_note(
     dest_addr: [Felt; 3],
     faucet_id: AccountId,
     asset_amount: u64,
-    sender: AccountId
+    sender: AccountId,
+    note_tag: NoteTag
 ) -> Result<Note, NoteError> {
     let note = Note::new(
         NoteAssets::new(
@@ -22,7 +23,7 @@ pub fn new_crosschain_note(
         NoteMetadata::new(
             sender, 
             NoteType::Private, 
-            NoteTag::from_account_id(faucet_id, NoteExecutionMode::Local)?, 
+            note_tag,
             NoteExecutionHint::always(), 
             Felt::ZERO
         )?, 
