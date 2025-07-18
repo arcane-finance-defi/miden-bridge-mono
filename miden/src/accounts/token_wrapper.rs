@@ -1,3 +1,5 @@
+use alloc::boxed::Box;
+use alloc::string::ToString;
 use miden_lib::account::auth::RpoFalcon512;
 use miden_lib::account::faucets::BasicFungibleFaucet;
 use miden_lib::AuthScheme;
@@ -5,7 +7,7 @@ use crate::accounts::components::token_wrapper_account_library;
 
 use miden_objects::asset::TokenSymbol;
 use miden_objects::{AccountError, Felt, Word};
-use miden_objects::account::{Account, AccountBuilder, AccountComponent, AccountIdAnchor, AccountStorageMode, AccountType, StorageSlot};
+use miden_objects::account::{Account, AccountBuilder, AccountComponent, AccountStorageMode, AccountType, StorageSlot};
 use miden_objects::note::NoteTag;
 use miden_objects::utils::sync::LazyLock;
 
@@ -57,7 +59,6 @@ impl From<TokenWrapperAccount> for AccountComponent {
 
 fn builder_internal(
     init_seed: [u8; 32],
-    id_anchor: AccountIdAnchor,
     symbol: TokenSymbol,
     decimals: u8,
     max_supply: Felt,
@@ -67,18 +68,16 @@ fn builder_internal(
 ) -> Result<AccountBuilder, AccountError> {
 
     Ok(AccountBuilder::new(init_seed)
-        .anchor(id_anchor)
         .account_type(AccountType::FungibleFaucet)
         .storage_mode(account_storage_mode)
         .with_component(TokenWrapperAccount::new(origin_network, origin_address))
         .with_component(BasicFungibleFaucet::new(symbol, decimals, max_supply)
-            .map_err(AccountError::FungibleFaucetError)?)
+            .expect("Fungible faucet component build failed"))
     )
 }
 
 pub fn create_token_wrapper_account(
     init_seed: [u8; 32],
-    id_anchor: AccountIdAnchor,
     symbol: TokenSymbol,
     decimals: u8,
     max_supply: Felt,
@@ -93,14 +92,13 @@ pub fn create_token_wrapper_account(
 
     let (account, account_seed) = builder_internal(
         init_seed,
-        id_anchor,
         symbol,
         decimals,
         max_supply,
         origin_network,
         origin_address,
         account_storage_mode
-    )?.with_component(auth_component).build()?;
+    )?.with_auth_component(auth_component).build()?;
 
     Ok((account, account_seed))
 }
@@ -108,7 +106,6 @@ pub fn create_token_wrapper_account(
 #[cfg(any(feature = "testing", test))]
 pub fn create_token_wrapper_account_builder(
     init_seed: [u8; 32],
-    id_anchor: AccountIdAnchor,
     symbol: TokenSymbol,
     decimals: u8,
     max_supply: Felt,
@@ -118,7 +115,6 @@ pub fn create_token_wrapper_account_builder(
 ) -> Result<AccountBuilder, AccountError> {
     builder_internal(
         init_seed,
-        id_anchor,
         symbol,
         decimals,
         max_supply,

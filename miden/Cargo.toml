@@ -17,20 +17,20 @@ with-debug-info = ["miden-stdlib/with-debug-info"]
 [dependencies]
 alloy-primitives = { version = "1.0.0", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-miden-lib = { version = "0.9.0", default-features = false }
-miden-objects = { version = "0.9.1", default-features = false }
-miden-stdlib = { version = "^0.14.0", default-features = false }
-miden-tx = { version = "0.9.0", default-features = false }
+miden-lib = { version = "0.10.0", default-features = false }
+miden-objects = { version = "0.10.0", default-features = false }
+miden-stdlib = { version = "^0.16.2", default-features = false }
+miden-tx = { version = "0.10.0", default-features = false }
 thiserror = "2.0.12"
 
 [dev-dependencies]
-miden-lib = { version = "0.9.0", default-features = false }
-miden-objects = { version = "0.9.1", features = ["testing"], default-features = false }
-miden-tx = { version = "0.9.0", features = ["testing"], default-features = false }
-miden-prover = { version = "^0.14.0", default-features = false }
+miden-lib = { version = "0.10.0", default-features = false }
+miden-objects = { version = "0.10.0", features = ["testing"], default-features = false }
+miden-tx = { version = "0.10.0", features = ["testing"], default-features = false }
+miden-prover = { version = "^0.16.2", default-features = false }
 winter-maybe-async = { version = "0.12" }
 rand_chacha = "0.9.0"
-miden-testing = "0.9.0"
+miden-testing = "0.10.0"
 
 
 [build-dependencies]
