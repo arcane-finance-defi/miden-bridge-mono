@@ -26,7 +26,7 @@ use miden_client::transaction::{TransactionRequest, TransactionRequestBuilder};
 use miden_client::utils::Deserializable;
 use miden_client::{Client, ClientError, Felt};
 use miden_crypto::dsa::rpo_falcon512::SecretKey;
-use miden_crypto::hash::rpo::RpoDigest;
+use miden_objects::crypto::hash::rpo::RpoDigest;
 use miden_crypto::rand::RpoRandomCoin;
 use miden_crypto::Word;
 use miden_objects::account::{
@@ -137,7 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         OnchainClient::new(config.rpc_url().clone(), config.rpc_timeout_ms().clone());
     rocket
         .manage(State { client: Arc::new(onchain), sender })
-        .mount("/", routes![chain_tip, mint_note, poll])
+        .mount("/".to_string(), routes![chain_tip, mint_note, poll])
         .launch()
         .await
         .unwrap();

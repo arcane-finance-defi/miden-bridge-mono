@@ -1,11 +1,9 @@
-use miden_crypto::Word;
-use miden_objects::Felt;
+use miden_bridge::utils::{felts_to_evm_addresses, AddressFormatError};
+use miden_objects::Word;
 use miden_objects::utils::ToHex;
-use crate::utils::{felts_to_evm_addresses, AddressFormatError};
 
 pub fn decode_slot_into_origin_info(slot: Word) -> Result<(u32, String), AddressFormatError> {
-    let slot_value: [Felt; 4] = slot;
-    let (origin_network, origin_address) = slot_value
+    let (origin_network, origin_address) = slot
         .split_at_checked(1)
         .unwrap();
     let origin_address = felts_to_evm_addresses(
@@ -16,7 +14,7 @@ pub fn decode_slot_into_origin_info(slot: Word) -> Result<(u32, String), Address
         ]
     )?;
 
-    Ok((origin_network[0].as_int().try_into().unwrap(), origin_address.to_hex_with_prefix()))
+    Ok((origin_network[0].as_int().try_into().unwrap(), origin_address.to_checksum(None)))
 }
 
 mod tests {

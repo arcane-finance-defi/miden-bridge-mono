@@ -1,4 +1,4 @@
-use deadpool_sqlite::{Config, Pool, Runtime};
+use async_sqlite::{Pool, JournalMode, PoolBuilder};
 use miden_client::store::StoreError;
 use miden_client::utils::{Deserializable, Serializable};
 use miden_objects::account::AccountId;
@@ -13,20 +13,17 @@ impl Store {
     pub async fn new(database_filepath: PathBuf) -> Result<Self, StoreError> {
         let database_exists = database_filepath.exists();
 
-        let connection_cfg = Config::new(database_filepath);
-        let pool = connection_cfg
-            .builder(Runtime::Tokio1)
-            .map_err(|err| StoreError::DatabaseError(err.to_string()))?
-            .build()
+        let pool = PoolBuilder::new()
+            .path(database_filepath)
+            .journal_mode(JournalMode::Wal)
+            .open()
+            .await
             .map_err(|err| StoreError::DatabaseError(err.to_string()))?;
 
         if !database_exists {
-            pool.get()
+            pool.conn_mut(|conn| conn.execute_batch(include_str!("store.sql")))
                 .await
-                .map_err(|err| StoreError::DatabaseError(err.to_string()))?
-                .interact(|conn| conn.execute_batch(include_str!("store.sql")))
-                .await
-                .map_err(|err| StoreError::DatabaseError(err.to_string()))??;
+                .map_err(|err| StoreError::DatabaseError(err.to_string()))?;
         }
 
         Ok(Self { pool })
@@ -40,10 +37,7 @@ impl Store {
         let origin_address = origin_address.to_string(); // move into closure
 
         let result = self.pool
-            .get()
-            .await
-            .map_err(|err| StoreError::DatabaseError(err.to_string()))?
-            .interact(move |conn| {
+            .conn(move |conn| {
                 let mut stmt = conn.prepare(
                     "SELECT miden_faucet_id FROM assets_info WHERE origin_network = ?1 AND origin_address = ?2"
                 )?;
@@ -61,7 +55,7 @@ impl Store {
                 }
             })
             .await
-            .map_err(|err| StoreError::DatabaseError(err.to_string()))??;
+            .map_err(|err| StoreError::DatabaseError(err.to_string()))?;
 
         Ok(result)
     }
@@ -76,10 +70,7 @@ impl Store {
         let faucet_id_bytes = faucet_id.to_bytes();
 
         self.pool
-            .get()
-            .await
-            .map_err(|err| StoreError::DatabaseError(err.to_string()))?
-            .interact(move |conn| {
+            .conn_mut(move |conn| {
                 conn.execute(
                     "INSERT INTO assets_info (origin_network, origin_address, miden_faucet_id)
                      VALUES (?1, ?2, ?3)",
@@ -88,7 +79,7 @@ impl Store {
                 .map(|_| ())
             })
             .await
-            .map_err(|err| StoreError::DatabaseError(err.to_string()))??;
+            .map_err(|err| StoreError::DatabaseError(err.to_string()))?;
 
         Ok(())
     }

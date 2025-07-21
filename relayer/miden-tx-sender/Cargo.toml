@@ -5,22 +5,17 @@ edition = "2024"
 rust-version = "1.87.0"
 
 [dependencies]
-alloy-primitives = "1.0.0"
-deadpool-sqlite = { version = "0.11", features = ["rt_tokio_1"] }
+async-sqlite = "0.5.2"
 dotenv = "0.15.0"
-eyre = "0.6.12"
 miden-bridge = { path = "../../miden" }
-miden-client = { version = "0.9.2", features = ["concurrent", "sqlite", "tonic"] }
-miden-crypto = "0.14.1"
-miden-objects = "0.9.2"
+miden-client = { version = "0.10.0", features = ["sqlite", "tonic"] }
+miden-crypto = "0.15.7"
+miden-objects = "0.10.0"
+miden-lib = "0.10.0"
 rand = "0.9"
 rocket = { version = "0.5.1", features = ["json"] }
-rusqlite = { version = "0.35", features = ["bundled"] }
+rusqlite = { version = "^0.36", features = ["bundled"] }
 serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0"
 thiserror = "2.0.12"
 tokio = "1.44.1"
 log = "0.4.27"
-
-[patch.crates-io]
-miden-client = { git = "https://github.com/slon2015/miden-client", branch = "fix/sync-notes-by-tag" }

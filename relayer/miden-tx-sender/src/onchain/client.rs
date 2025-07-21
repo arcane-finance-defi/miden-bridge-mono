@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use crate::onchain::deploy_token::insert_new_fungible_faucet;
 use crate::onchain::errors::OnchainError;
 use crate::onchain::mint_note::{mint_asset, MintedNote};
@@ -10,21 +11,21 @@ use miden_client::store::sqlite_store::SqliteStore;
 use miden_client::transaction::{
     TransactionRequest, TransactionResult,
 };
-use miden_client::Client;
-use miden_crypto::rand::RpoRandomCoin;
+use miden_client::{Client, ExecutionOptions};
+use miden_objects::crypto::rand::RpoRandomCoin;
 use miden_objects::account::{AccountId, AccountStorageMode};
-use miden_objects::{Felt, Word};
+use miden_objects::{Felt, Word, MAX_TX_EXECUTION_CYCLES, MIN_TX_EXECUTION_CYCLES};
 use rand::rngs::StdRng;
 use rand::Rng;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use miden_bridge::accounts::token_wrapper::bridge_note_tag;
+use miden_bridge::utils::evm_address_to_felts;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender as OneshotSender;
 use crate::onchain::asset::Asset;
 use crate::onchain::poll_events::{poll_events, PolledEvents};
-use crate::utils::evm_address_to_felts;
 
 pub struct OnchainClient {
     pub rpc: Arc<dyn NodeRpcClient + Send + Sync + 'static>,
@@ -52,14 +53,14 @@ impl OnchainClient {
             .rpc
             .get_block_header_by_number(Some(epoch_block_number), false)
             .await
-            .map_err(OnchainError::from)?;
+            .map_err(OnchainError::RpcCallError)?;
 
         Ok(epoch_block_header)
     }
 
     pub async fn get_chain_tip(&mut self) -> Result<BlockNumber, OnchainError> {
         let sync_response =
-            self.rpc.sync_notes(0u32.into(), &[]).await.map_err(OnchainError::from)?;
+            self.rpc.sync_notes(0u32.into(), &BTreeSet::new()).await.map_err(OnchainError::RpcCallError)?;
 
         let latest_block_height = sync_response.chain_tip;
 
@@ -95,7 +96,7 @@ pub enum ClientCommand {
 
 async fn get_sync_height(execution_client: &mut Client) -> Result<BlockNumber, OnchainError> {
     execution_client.sync_state().await?;
-    execution_client.get_sync_height().await.map_err(OnchainError::from)
+    execution_client.get_sync_height().await.map_err(OnchainError::MidenClientError)
 }
 
 async fn mint_note(
@@ -120,7 +121,7 @@ async fn mint_note(
                     &asset.asset_symbol,
                     asset.decimals,
                     u64::from(asset.origin_network),
-                    evm_address_to_felts(asset.origin_address.clone()).map_err(OnchainError::from)?
+                    evm_address_to_felts(asset.origin_address.clone()).map_err(OnchainError::AddressFormatError)?
                 )
                 .await?;
 
@@ -170,7 +171,12 @@ pub fn client_process_loop(
             Box::new(rng),
             miden_client_store,
             keystore.clone(),
-            false,
+            ExecutionOptions::new(
+                Some(MAX_TX_EXECUTION_CYCLES),
+                MIN_TX_EXECUTION_CYCLES,
+                false,
+                false,
+            ).unwrap(),
             None,
             None
         );

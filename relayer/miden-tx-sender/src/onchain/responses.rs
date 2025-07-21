@@ -1,5 +1,4 @@
-use miden_crypto::Word;
-use miden_objects::account::{Account, AuthSecretKey};
+use miden_objects::{Word, account::{Account, AuthSecretKey}};
 
 pub struct CreatedTokenAccount {
     account: Account,

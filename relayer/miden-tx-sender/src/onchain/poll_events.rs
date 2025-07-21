@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use miden_bridge::accounts::token_wrapper::bridge_note_tag;
+use miden_bridge::utils::felts_to_evm_addresses;
 use miden_client::Client;
 use miden_client::store::{InputNoteRecord, NoteFilter};
 use miden_objects::block::BlockNumber;
@@ -7,7 +8,6 @@ use miden_objects::utils::ToHex;
 use rocket::serde::{Deserialize, Serialize};
 use crate::onchain::asset::Asset;
 use crate::onchain::errors::OnchainError;
-use crate::utils::felts_to_evm_addresses;
 use crate::utils::metadata::decode_slot_into_token_metadata;
 use crate::utils::origin::decode_slot_into_origin_info;
 

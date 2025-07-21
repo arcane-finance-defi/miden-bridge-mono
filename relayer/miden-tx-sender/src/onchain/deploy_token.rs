@@ -6,10 +6,10 @@ use miden_client::account::component::{BasicFungibleFaucet, RpoFalcon512};
 use miden_client::account::{AccountBuilder, AccountStorageMode, AccountType};
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::{Client, ClientError};
-use miden_crypto::{dsa::rpo_falcon512::SecretKey, hash::rpo::Rpo256, Word};
+use miden_crypto::{hash::rpo::Rpo256};
 use miden_objects::account::{Account, AuthSecretKey};
 use miden_objects::asset::TokenSymbol;
-use miden_objects::Felt;
+use miden_objects::{Felt, Word, crypto::dsa::rpo_falcon512::SecretKey};
 use rand::prelude::StdRng;
 use rand::{rng, RngCore};
 
@@ -36,13 +36,10 @@ pub async fn insert_new_fungible_faucet(
 
     let symbol = TokenSymbol::new(symbol).unwrap();
 
-    let anchor_block = client.get_latest_epoch_block().await?;
-
     let (account, seed) = AccountBuilder::new(init_seed)
-        .anchor((&anchor_block).try_into().unwrap())
         .account_type(AccountType::FungibleFaucet)
         .storage_mode(storage_mode)
-        .with_component(RpoFalcon512::new(pub_key))
+        .with_auth_component(RpoFalcon512::new(pub_key))
         .with_component(TokenWrapperAccount::new(origin_network, origin_address))
         .with_component(BasicFungibleFaucet::new(symbol, decimals, MAX_SUPPLY).unwrap())
         .build()?;
@@ -67,23 +64,20 @@ pub async fn deploy(
 
     let key_pair = SecretKey::new();
 
-    let anchor_block = client.get_anchor_block().await?;
-
     let builder = AccountBuilder::new(init_seed)
-        .anchor((&anchor_block).try_into().expect("anchor block should be valid"))
         .account_type(AccountType::FungibleFaucet)
         .storage_mode(AccountStorageMode::Public)
         .with_component(RpoFalcon512::new(key_pair.public_key()))
         .with_component(
             BasicFungibleFaucet::new(
-                TokenSymbol::new(symbol).map_err(OnchainError::from)?,
+                TokenSymbol::new(symbol).map_err(OnchainError::TokenSymbolError)?,
                 decimals,
                 MAX_SUPPLY,
             )
-            .map_err(OnchainError::from)?,
+            .map_err(OnchainError::FungibleFaucetError)?,
         );
 
-    let (new_account, seed) = builder.build().map_err(OnchainError::from)?;
+    let (new_account, seed) = builder.build().map_err(OnchainError::AccountError)?;
 
     Ok(CreatedTokenAccount::new(
         new_account,

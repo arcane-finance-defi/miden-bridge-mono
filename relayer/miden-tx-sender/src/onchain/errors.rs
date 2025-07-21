@@ -1,11 +1,12 @@
+use miden_bridge::utils::AddressFormatError;
 use miden_client::ClientError;
 use miden_client::rpc::RpcError;
 use miden_client::store::StoreError;
 use miden_client::transaction::{TransactionProverError, TransactionRequestError};
-use miden_objects::{AccountError, AssetError, FungibleFaucetError, NoteError, TokenSymbolError};
+use miden_lib::account::faucets::FungibleFaucetError;
+use miden_objects::{AccountError, AssetError, NoteError, TokenSymbolError};
 use miden_objects::account::AccountId;
 use thiserror::Error;
-use crate::utils::errors::AddressFormatError;
 
 #[derive(Error, Debug)]
 pub enum OnchainError {
