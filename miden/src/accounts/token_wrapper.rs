@@ -1,5 +1,3 @@
-use alloc::boxed::Box;
-use alloc::string::ToString;
 use miden_lib::account::auth::RpoFalcon512;
 use miden_lib::account::faucets::BasicFungibleFaucet;
 use miden_lib::AuthScheme;
