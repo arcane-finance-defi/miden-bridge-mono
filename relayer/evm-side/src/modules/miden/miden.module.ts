@@ -78,7 +78,7 @@ export class MidenModule extends ConfigurableModuleClass {
   ) {
     const module = super.registerAsync(options);
 
-    const evmRpcsCount = process.env.EVM_CHAIN_IDS!.split(',').length;
+    const evmRpcsCount = process.env.MIDEN_CHAIN_IDS!.split(',').length;
     const pollerProviders = new Array(evmRpcsCount)
       .fill(0)
       .map((_v, index) => generateAsyncProvider(index));
