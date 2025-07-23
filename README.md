@@ -35,12 +35,17 @@ Currently the bridge supports Miden testnet (chain_id=9966) and Sepolia testnet 
 
 Sepolia contracts:
 
-- MidenBridgeExtension `0x1ca41f72bc07DbEb85e059e18cb9DF9781fDC1F3`
-- PolygonBridgeMockProxy `0x10371D387650F003c48f35125fa71B3906c62795`
+- MidenBridgeExtension `0x0b03df1D4B3884b8987254D0C990342B571183AF`
+- PolygonBridgeMockProxy `0x341de46031CDBaD4872256F402481B51C2802C5E`
+
+Amoy Contracts:
+
+- MidenBridgeExtension `0x82a888861cd58e18c474c1D3DAf8aCc502e5e6eA`
+- PolygonBridgeMockProxy `0x77e1099dcc34E82377605A06a6EaA1f68faDc7A5`
 
 ## Supported assets
 
-- USDC Sepolia ([0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238](https://sepolia.etherscan.io/token/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238)) <=> USDC Miden ([0xf12903e6b9d03b2000013b8382c73e](https://testnet.midenscan.com/account/0xf12903e6b9d03b2000013b8382c73e))
+- USDC Sepolia ([0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238](https://sepolia.etherscan.io/token/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238))/USDC Amoy ([0xdEE54cB0c0D153010b37E6D51AaaD6d682247E5e](https://amoy.polygonscan.com/token/0xdee54cb0c0d153010b37e6d51aaad6d682247e5e)) <=> USDC Miden ([0x63c9d7af451fda2000fa06ce0bdefd](https://testnet.midenscan.com/account/0x63c9d7af451fda2000fa06ce0bdefd))
 
 ## How to use
 
@@ -52,7 +57,7 @@ command
 ## Prerequisites
 
 - Node.js (version X.X.X or higher)
-- Rust ^1.85.0
+- Rust ^1.88.0
 - npm or yarn
 - Access to Ethereum Sepolia testnet and an address with some gas (you can get it from faucet)
 - Access to Polygon PoS Amoy testnet
