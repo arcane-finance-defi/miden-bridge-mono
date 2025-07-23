@@ -932,6 +932,7 @@ name = "miden-bridge"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives",
+ "anyhow",
  "hex",
  "miden-assembly 0.14.0",
  "miden-lib 0.10.0",

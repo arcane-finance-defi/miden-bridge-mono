@@ -22,6 +22,7 @@ miden-objects = { version = "0.10.0", default-features = false }
 miden-stdlib = { version = "^0.16.2", default-features = false }
 miden-tx = { version = "0.10.0", default-features = false }
 thiserror = "2.0.12"
+anyhow = "1.0.98"
 
 [dev-dependencies]
 miden-lib = { version = "0.10.0", default-features = false }

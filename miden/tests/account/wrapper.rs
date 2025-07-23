@@ -1,25 +1,17 @@
-use std::sync::Arc;
-use miden_assembly::diagnostics::IntoDiagnostic;
-use miden_assembly::Report;
 use miden_lib::account::auth::RpoFalcon512;
-use miden_lib::AuthScheme;
 use miden_lib::transaction::TransactionKernel;
-use miden_objects::account::{AccountId, AccountIdAnchor, AccountStorageMode, AuthSecretKey};
+use miden_objects::account::{AccountId, AccountStorageMode, AuthSecretKey};
 use miden_objects::asset::{FungibleAsset, TokenSymbol};
 use miden_objects::{Felt, FieldElement, Word};
 use miden_objects::crypto::dsa::rpo_falcon512::{PublicKey, SecretKey};
 use miden_objects::crypto::rand::{FeltRng, RpoRandomCoin};
-use miden_objects::note::{Note, NoteAssets, NoteExecutionHint, NoteExecutionMode, NoteId, NoteInputs, NoteMetadata, NoteRecipient, NoteTag, NoteType};
+use miden_objects::note::{Note, NoteAssets, NoteExecutionHint, NoteId, NoteInputs, NoteMetadata, NoteRecipient, NoteTag, NoteType};
 use miden_objects::testing::account_id::ACCOUNT_ID_SENDER;
 use miden_objects::transaction::{OutputNote, TransactionScript};
 use miden_objects::utils::word_to_masm_push_string;
-use miden_tx::auth::BasicAuthenticator;
-use miden_testing::{AccountState, Auth, MockChain, TransactionContextBuilder};
-use rand_chacha::ChaCha20Rng;
-use rand_chacha::rand_core::SeedableRng;
+use miden_testing::{AccountState, Auth, MockChain};
 use miden_bridge::accounts::{token_wrapper::bridge_note_tag, testing::create_token_wrapper_account_builder};
 use miden_bridge::notes::bridge::{bridge, croschain};
-use crate::common::executor::execute_with_debugger;
 
 pub fn get_new_pk_and_authenticator(seed: [Felt; 4]) -> (PublicKey, AuthSecretKey) {
     let seed = Word::from(seed);
@@ -32,13 +24,10 @@ pub fn get_new_pk_and_authenticator(seed: [Felt; 4]) -> (PublicKey, AuthSecretKe
 }
 
 #[test]
-fn should_issue_public_bridge_note() -> Result<(), Report> {
+fn should_issue_public_bridge_note() -> anyhow::Result<()> {
     let mut mock_chain = MockChain::new();
 
-    let anchor_block_id = mock_chain.latest_block_header().epoch_block_num();
-    let anchor_block_commitment = mock_chain.block_header(anchor_block_id.as_usize()).commitment();
-
-    let (pub_key, secret_key) = get_new_pk_and_authenticator([
+    let (pub_key, _secret_key) = get_new_pk_and_authenticator([
         Felt::new(1),
         Felt::new(2),
         Felt::new(3),
@@ -47,28 +36,23 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
 
     let wrapper_builder = create_token_wrapper_account_builder(
         [1; 32],
-        AccountIdAnchor::new(
-            anchor_block_id,
-            anchor_block_commitment
-        ).into_diagnostic()?,
-        TokenSymbol::new("TEST").into_diagnostic()?,
+        TokenSymbol::new("TEST")?,
         6,
         Felt::new(1000000),
         1,
         [Felt::new(1),Felt::new(1),Felt::new(1)],
         AccountStorageMode::Public,
-    ).into_diagnostic()?;
+    )?;
 
     wrapper_builder.clone()
-        .with_component(RpoFalcon512::new(pub_key))
-        .build()
-        .into_diagnostic()?;
+        .with_auth_component(RpoFalcon512::new(pub_key))
+        .build()?;
 
     let mut wrapper = mock_chain.add_pending_account_from_builder(
         Auth::BasicAuth,
         wrapper_builder,
         AccountState::Exists
-    );
+    )?;
 
 
     let fungible_asset =
@@ -112,17 +96,17 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
         call_address[0],
         call_address[1],
         call_address[2],
-    ]).into_diagnostic()?;
+    ])?;
 
     let note = Note::new(
-        NoteAssets::new(vec![fungible_asset]).into_diagnostic()?,
+        NoteAssets::new(vec![fungible_asset])?,
         NoteMetadata::new(
-            AccountId::try_from(ACCOUNT_ID_SENDER).into_diagnostic()?,
+            AccountId::try_from(ACCOUNT_ID_SENDER)?,
             NoteType::Public,
-            NoteTag::from_account_id(wrapper.id(), NoteExecutionMode::Local).into_diagnostic()?,
+            NoteTag::from_account_id(wrapper.id()),
             NoteExecutionHint::Always,
             Felt::ZERO
-        ).into_diagnostic()?,
+        )?,
         NoteRecipient::new(
             [Felt::new(1), Felt::ZERO, Felt::ZERO, Felt::ZERO],
             croschain(),
@@ -138,7 +122,7 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
         None,
         &[],
         &[]
-    );
+    )?;
 
     let mint_tx_script_code = format!(
         "
@@ -167,30 +151,30 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
         note_type = Felt::from(NoteType::Private),
         recipient = word_to_masm_push_string(&rng.draw_word()),
         aux = 0,
-        tag = Felt::from(NoteTag::for_local_use_case(0,0).into_diagnostic()?),
+        tag = Felt::from(NoteTag::for_local_use_case(0,0)?),
         note_execution_hint = Felt::from(NoteExecutionHint::Always),
         amount = 10000
     );
 
     let mint_tx_script =
-        TransactionScript::compile(mint_tx_script_code, vec![], TransactionKernel::testing_assembler())
-            .into_diagnostic()?;
+        TransactionScript::compile(mint_tx_script_code, TransactionKernel::testing_assembler())
+            ?;
 
     let executed_mint_transaction = mock_chain.build_tx_context(
-        wrapper.clone(),
-        &[],
-        &[]
-    )
-        .tx_script(mint_tx_script)
-        .tx_inputs(mint_tx_inputs)
-        .build()
-        .execute()
-        .into_diagnostic()?;
+            wrapper.clone(),
+            &[],
+            &[]
+        )?
+            .tx_script(mint_tx_script)
+            .tx_inputs(mint_tx_inputs)
+            .build()?
+            .execute()?;
 
-    mock_chain.add_pending_executed_transaction(&executed_mint_transaction.clone());
-    mock_chain.prove_next_block();
 
-    wrapper.apply_delta(&executed_mint_transaction.account_delta().clone()).into_diagnostic()?;
+    mock_chain.add_pending_executed_transaction(&executed_mint_transaction.clone())?;
+    mock_chain.prove_next_block()?;
+
+    wrapper.apply_delta(&executed_mint_transaction.account_delta().clone())?;
 
     let asset_word = Word::from(fungible_asset);
 
@@ -210,23 +194,23 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
             call_address[0],
             call_address[1],
             call_address[2],
-        ]).into_diagnostic()?
+        ])?
     );
 
     let expected_note_id = NoteId::new(
         expected_recipient.digest(),
-        NoteAssets::new(vec![]).into_diagnostic()?.commitment()
+        NoteAssets::new(vec![])?.commitment()
     );
 
     let expected_note = Note::new(
-        NoteAssets::new(vec![]).into_diagnostic()?,
+        NoteAssets::new(vec![])?,
         NoteMetadata::new(
             wrapper.id(),
             NoteType::Public,
             bridge_note_tag(),
             NoteExecutionHint::Always,
             Felt::ZERO
-        ).into_diagnostic()?,
+        )?,
         expected_recipient.clone()
     );
 
@@ -236,19 +220,18 @@ fn should_issue_public_bridge_note() -> Result<(), Report> {
             None,
             &[note.clone().id()],
             &[]
-        );
+        )?;
 
 
     let executed_transaction = mock_chain.build_tx_context(
-        wrapper.clone(),
-        &[],
-        &[]
-    )
-        .tx_inputs(tx_inputs)
-        .expected_notes(vec![OutputNote::Full(expected_note)])
-        .build()
-        .execute()
-        .into_diagnostic()?;
+            wrapper.clone(),
+            &[],
+            &[]
+        )?
+            .tx_inputs(tx_inputs)
+            .extend_expected_output_notes(vec![OutputNote::Full(expected_note)])
+            .build()?
+            .execute()?;
 
     assert_eq!(executed_transaction.output_notes().num_notes(), 1);
     assert_eq!(executed_transaction.output_notes().get_note(0).metadata().tag(), bridge_note_tag());
