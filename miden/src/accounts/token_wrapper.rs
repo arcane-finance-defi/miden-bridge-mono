@@ -1,4 +1,4 @@
-use miden_lib::account::auth::RpoFalcon512;
+use miden_lib::account::auth::RpoFalcon512ProcedureAcl;
 use miden_lib::account::faucets::BasicFungibleFaucet;
 use miden_lib::AuthScheme;
 use crate::accounts::components::token_wrapper_account_library;
@@ -84,8 +84,9 @@ pub fn create_token_wrapper_account(
     account_storage_mode: AccountStorageMode,
     auth_scheme: AuthScheme,
 ) -> Result<(Account, Word), AccountError> {
-    let auth_component: RpoFalcon512 = match auth_scheme {
-        AuthScheme::RpoFalcon512 { pub_key } => RpoFalcon512::new(pub_key),
+    let auth_component: RpoFalcon512ProcedureAcl = match auth_scheme {
+        AuthScheme::RpoFalcon512 { pub_key } =>
+            RpoFalcon512ProcedureAcl::new(pub_key, vec![BasicFungibleFaucet::distribute_digest()])?,
     };
 
     let (account, account_seed) = builder_internal(

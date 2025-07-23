@@ -4,11 +4,13 @@ use std::{
 };
 use std::ffi::{OsStr, OsString};
 use std::sync::Arc;
-use miden_assembly::{diagnostics::{IntoDiagnostic, Result}, utils::Serializable, Assembler, DefaultSourceManager, Library, LibraryPath, Report};
-use miden_assembly::ast::{Module, ModuleKind};
+use miden_assembly::Report;
+use miden_objects::assembly::{diagnostics::{IntoDiagnostic, Result}, Assembler, DefaultSourceManager, Library, LibraryPath};
+use miden_objects::assembly::{Module, ModuleKind};
 use miden_lib::transaction::TransactionKernel;
 use miden_objects::crypto::hash::rpo::RpoDigest;
 use miden_objects::note::{NoteScript, NoteTag};
+use miden_objects::utils::Serializable;
 use regex::Regex;
 use walkdir::WalkDir;
 
@@ -185,7 +187,7 @@ fn compile_contracts(source_dir: &Path, target_dir: &Path, note_code_commitments
             .replace("{bridge_note_code_commitment_felt_2}", bridge_note_code_digest.get(1).unwrap().as_int().to_string().as_str())
             .replace("{bridge_note_code_commitment_felt_3}", bridge_note_code_digest.get(2).unwrap().as_int().to_string().as_str())
             .replace("{bridge_note_code_commitment_felt_4}", bridge_note_code_digest.get(3).unwrap().as_int().to_string().as_str())
-            .replace("{bridge_tag}", bridge_note_tag.inner().to_string().as_str());
+            .replace("{bridge_tag}", bridge_note_tag.as_u32().to_string().as_str());
 
 
         let component_file_path =

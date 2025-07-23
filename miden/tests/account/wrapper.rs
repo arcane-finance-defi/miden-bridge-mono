@@ -1,4 +1,4 @@
-use miden_lib::account::auth::RpoFalcon512;
+use miden_lib::account::auth::{RpoFalcon512, RpoFalcon512ProcedureAcl};
 use miden_lib::transaction::TransactionKernel;
 use miden_objects::account::{AccountId, AccountStorageMode, AuthSecretKey};
 use miden_objects::asset::{FungibleAsset, TokenSymbol};
@@ -12,6 +12,7 @@ use miden_objects::utils::word_to_masm_push_string;
 use miden_testing::{AccountState, Auth, MockChain};
 use miden_bridge::accounts::{token_wrapper::bridge_note_tag, testing::create_token_wrapper_account_builder};
 use miden_bridge::notes::bridge::{bridge, croschain};
+use miden_lib::account::faucets::BasicFungibleFaucet;
 
 pub fn get_new_pk_and_authenticator(seed: [Felt; 4]) -> (PublicKey, AuthSecretKey) {
     let seed = Word::from(seed);
@@ -45,11 +46,16 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
     )?;
 
     wrapper_builder.clone()
-        .with_auth_component(RpoFalcon512::new(pub_key))
+        .with_auth_component(
+            RpoFalcon512ProcedureAcl::new(
+                pub_key,
+                vec![BasicFungibleFaucet::distribute_digest()]
+            )?
+        )
         .build()?;
 
     let mut wrapper = mock_chain.add_pending_account_from_builder(
-        Auth::BasicAuth,
+        Auth::ProcedureAcl {auth_trigger_procedures: vec![BasicFungibleFaucet::distribute_digest()]},
         wrapper_builder,
         AccountState::Exists
     )?;
@@ -139,9 +145,6 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
                 # => [amount, tag, aux, note_type, execution_hint, RECIPIENT, pad(7)]
 
                 call.::miden::contracts::faucets::basic_fungible::distribute
-                # => [note_idx, pad(15)]
-
-                call.::miden::contracts::auth::basic::auth_tx_rpo_falcon512
                 # => [note_idx, pad(15)]
 
                 # truncate the stack

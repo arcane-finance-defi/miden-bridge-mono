@@ -52,10 +52,6 @@ export.bridge.2
     exec.faucet::burn
     # => [ASSET, ...]
 
-    # increments the nonce (anyone should be able to call that function)
-    push.1 exec.account::incr_nonce
-    # => [ASSET, pad(12)]
-
     dup.8 add.12
     # => [inputs_num, ...]
 
