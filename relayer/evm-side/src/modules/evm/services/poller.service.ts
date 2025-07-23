@@ -84,8 +84,8 @@ export class PollerService {
       },
       assetAmount: new BigNumber(asset.amount.toString()),
       from: {
-        chainId: asset.originNetwork,
-        chainKind: this.getChainKind(asset.originNetwork),
+        chainId: this.chainId,
+        chainKind: 'evm',
       },
       to: {
         chainId: asset.destinationNetwork,
