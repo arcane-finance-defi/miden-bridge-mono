@@ -70,8 +70,8 @@ pub async fn poll_events(
             let token_account = tokens.get(&sender.clone().to_hex())
                 .unwrap().clone();
 
-            let origin_slot = token_account.storage().slots().get(2).unwrap();
-            let metadata_slot = token_account.storage().slots().get(3).unwrap();
+            let origin_slot = token_account.storage().slots().get(4).unwrap();
+            let metadata_slot = token_account.storage().slots().get(5).unwrap();
             let (origin_network, origin_address) = decode_slot_into_origin_info(
                 origin_slot.clone().value()
             ).unwrap();
