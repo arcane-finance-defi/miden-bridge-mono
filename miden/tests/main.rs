@@ -1,6 +1,5 @@
 extern crate alloc;
 
-
 mod account;
 // HELPER FUNCTIONS
 // ================================================================================================
@@ -23,4 +22,3 @@ macro_rules! assert_transaction_executor_error {
         }
     };
 }
-

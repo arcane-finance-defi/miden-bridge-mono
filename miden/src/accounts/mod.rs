@@ -1,6 +1,5 @@
-pub mod token_wrapper;
 pub mod components;
-
+pub mod token_wrapper;
 
 #[cfg(any(feature = "testing", test))]
 pub mod testing {

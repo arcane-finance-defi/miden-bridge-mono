@@ -1,16 +1,24 @@
-
 use std::{
-    collections::BTreeMap, env, fmt::Write, fs, io, path::{Path, PathBuf}
+    collections::BTreeMap,
+    env,
+    ffi::{OsStr, OsString},
+    fmt::Write,
+    fs, io,
+    path::{Path, PathBuf},
+    sync::Arc,
 };
-use std::ffi::{OsStr, OsString};
-use std::sync::Arc;
+
 use miden_assembly::Report;
-use miden_objects::assembly::{diagnostics::{IntoDiagnostic, Result}, Assembler, DefaultSourceManager, Library, LibraryPath};
-use miden_objects::assembly::{Module, ModuleKind};
 use miden_lib::transaction::TransactionKernel;
-use miden_objects::crypto::hash::rpo::RpoDigest;
-use miden_objects::note::{NoteScript, NoteTag};
-use miden_objects::utils::Serializable;
+use miden_objects::{
+    assembly::{
+        diagnostics::{IntoDiagnostic, Result},
+        Assembler, DefaultSourceManager, Library, LibraryPath, Module, ModuleKind,
+    },
+    crypto::hash::rpo::RpoDigest,
+    note::{NoteScript, NoteTag},
+    utils::Serializable,
+};
 use regex::Regex;
 use walkdir::WalkDir;
 
@@ -19,7 +27,6 @@ use walkdir::WalkDir;
 
 const CAN_WRITE_TO_SRC: bool = option_env!("DOCS_RS").is_none();
 const BRIDGE_TAG_USECASE: u16 = 12354;
-
 
 const ASSETS_DIR: &str = "assets";
 const ASM_DIR: &str = "asm";
@@ -40,7 +47,7 @@ fn main() -> Result<()> {
     // re-build when the MASM code changes
     println!("cargo:rerun-if-changed={ASM_DIR}");
     println!("cargo::rerun-if-env-changed=BUILD_GENERATED_FILES_IN_SRC");
-    
+
     // Copies the MASM code to the build directory
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let build_dir = env::var("OUT_DIR").unwrap();
@@ -56,7 +63,6 @@ fn main() -> Result<()> {
     let target_dir = Path::new(&build_dir).join(ASSETS_DIR);
     let target_contracts_dir = target_dir.join(ASM_CONTRACTS_DIR);
 
-
     let events_dir = source_dir.join(ASM_EVENT_SCRIPTS_DIR);
     let events_target_dir = target_dir.join(ASM_EVENT_SCRIPTS_DIR);
 
@@ -64,20 +70,17 @@ fn main() -> Result<()> {
     let note_target_dir = target_dir.join(ASM_NOTE_SCRIPTS_DIR);
 
     // compile note scripts
-    let compiled_event_scripts = compile_event_note_scripts(
-        &events_dir,
-        &events_target_dir,
-    )?;
+    let compiled_event_scripts = compile_event_note_scripts(&events_dir, &events_target_dir)?;
 
     // compile contracts
-    let assembler = compile_contracts(&contracts_dir, &target_contracts_dir, compiled_event_scripts)?;
+    let assembler =
+        compile_contracts(&contracts_dir, &target_contracts_dir, compiled_event_scripts)?;
 
     compile_note_scripts(&notes_dir, &note_target_dir, assembler)?;
 
     // Generate note error constants.
     generate_note_error_constants(&source_dir.join(ASM_NOTE_SCRIPTS_DIR), NOTE_ERRORS_FILE)?;
     generate_note_error_constants(&source_dir.join(ASM_CONTRACTS_DIR), ACCOUNT_ERRORS_FILE)?;
-
 
     Ok(())
 }
@@ -116,7 +119,10 @@ fn compile_note_scripts(source_dir: &Path, target_dir: &Path, assembler: Assembl
     Ok(())
 }
 
-fn compile_event_note_scripts(source_dir: &Path, target_dir: &Path) -> Result<BTreeMap<OsString, RpoDigest>> {
+fn compile_event_note_scripts(
+    source_dir: &Path,
+    target_dir: &Path,
+) -> Result<BTreeMap<OsString, RpoDigest>> {
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
     }
@@ -141,14 +147,10 @@ fn compile_event_note_scripts(source_dir: &Path, target_dir: &Path) -> Result<BT
 
         let file_name = masm_file_path.file_name().unwrap().to_owned();
 
-        result.insert(
-            file_name.clone(),
-            NoteScript::new(code).root()
-        );
+        result.insert(file_name.clone(), NoteScript::new(code).root());
     }
     Ok(result)
 }
-
 
 pub fn create_library(
     assembler: Assembler,
@@ -165,45 +167,64 @@ pub fn create_library(
     Ok(library)
 }
 
-fn compile_contracts(source_dir: &Path, target_dir: &Path, note_code_commitments: BTreeMap<OsString, RpoDigest>) -> Result<Assembler, Report> {
+fn compile_contracts(
+    source_dir: &Path,
+    target_dir: &Path,
+    note_code_commitments: BTreeMap<OsString, RpoDigest>,
+) -> Result<Assembler, Report> {
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
     }
 
     let mut assembler = create_assembler()?;
 
-    let bridge_note_code_digest = note_code_commitments.get(&OsStr::new("BRIDGE.masm").to_os_string()).unwrap().as_elements();
+    let bridge_note_code_digest = note_code_commitments
+        .get(&OsStr::new("BRIDGE.masm").to_os_string())
+        .unwrap()
+        .as_elements();
 
-    let bridge_note_tag = NoteTag::for_local_use_case(
-        BRIDGE_TAG_USECASE,
-        0
-    ).into_diagnostic()?;
+    let bridge_note_tag = NoteTag::for_local_use_case(BRIDGE_TAG_USECASE, 0).into_diagnostic()?;
 
     for masm_file_path in get_masm_files(source_dir).unwrap() {
-        let name = masm_file_path.file_name().unwrap().to_os_string().to_str().unwrap().replace(".masm", "");
+        let name = masm_file_path
+            .file_name()
+            .unwrap()
+            .to_os_string()
+            .to_str()
+            .unwrap()
+            .replace(".masm", "");
         let code = fs::read_to_string(masm_file_path).unwrap();
         let replaced_component_code = code
-            .replace("{bridge_note_code_commitment_felt_1}", bridge_note_code_digest.get(0).unwrap().as_int().to_string().as_str())
-            .replace("{bridge_note_code_commitment_felt_2}", bridge_note_code_digest.get(1).unwrap().as_int().to_string().as_str())
-            .replace("{bridge_note_code_commitment_felt_3}", bridge_note_code_digest.get(2).unwrap().as_int().to_string().as_str())
-            .replace("{bridge_note_code_commitment_felt_4}", bridge_note_code_digest.get(3).unwrap().as_int().to_string().as_str())
+            .replace(
+                "{bridge_note_code_commitment_felt_1}",
+                bridge_note_code_digest.get(0).unwrap().as_int().to_string().as_str(),
+            )
+            .replace(
+                "{bridge_note_code_commitment_felt_2}",
+                bridge_note_code_digest.get(1).unwrap().as_int().to_string().as_str(),
+            )
+            .replace(
+                "{bridge_note_code_commitment_felt_3}",
+                bridge_note_code_digest.get(2).unwrap().as_int().to_string().as_str(),
+            )
+            .replace(
+                "{bridge_note_code_commitment_felt_4}",
+                bridge_note_code_digest.get(3).unwrap().as_int().to_string().as_str(),
+            )
             .replace("{bridge_tag}", bridge_note_tag.as_u32().to_string().as_str());
 
-
-        let component_file_path =
-            source_dir.join(name.clone()).with_extension("masm");
+        let component_file_path = source_dir.join(name.clone()).with_extension("masm");
         fs::write(component_file_path, replaced_component_code.clone()).into_diagnostic()?;
 
         let library = create_library(
             assembler.clone(),
             format!("bridge::{}", name).as_str(),
-            replaced_component_code.as_str()
+            replaced_component_code.as_str(),
         )?;
 
         assembler.add_library(library.clone())?;
 
-        let component_file_path =
-            target_dir.join(name).with_extension(Library::LIBRARY_EXTENSION);
+        let component_file_path = target_dir.join(name).with_extension(Library::LIBRARY_EXTENSION);
         library.write_to_file(component_file_path).into_diagnostic()?;
     }
 
@@ -409,7 +430,7 @@ fn generate_note_errors(errors: BTreeMap<ErrorName, ExtractedError>) -> Result<S
 // Non-Fungible-Asset, ...).
 "
     )
-        .unwrap();
+    .unwrap();
 
     let mut last_error = None;
     for (name, error) in errors.iter() {
@@ -425,7 +446,7 @@ fn generate_note_errors(errors: BTreeMap<ErrorName, ExtractedError>) -> Result<S
             output,
             r#"pub const ERR_{name}: MasmError = MasmError::from_static_str("{message}");"#
         )
-            .into_diagnostic()?;
+        .into_diagnostic()?;
     }
 
     Ok(output)

@@ -12,7 +12,6 @@ const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_INPUTS="Should contain at least 12 inputs"
 # CROSSCHAIN script expects exactly 1 asset
 const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_ASSETS="Should contain exactly 1 asset"
 
-
 # CONSTANTS
 # =================================================================================================
 
@@ -20,7 +19,6 @@ const.INPUTS_NUM_PTR=0
 const.INPUTS_INDEX_PTR=1
 const.ASSETS_PTR=8
 const.INPUTS_PTR=16
-
 
 #! CROSSCHAIN script: burns the asset and emits the bridge exit event as public note
 #!
@@ -53,7 +51,6 @@ begin
 
     eq.1 assert.err=ERR_CROSSCHAIN_WRONG_NUMBER_OF_ASSETS
     drop
-
 
     mem_load.INPUTS_INDEX_PTR gt.0
     while.true
