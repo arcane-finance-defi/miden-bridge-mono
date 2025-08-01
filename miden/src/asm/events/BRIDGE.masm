@@ -12,7 +12,6 @@ const.ERR_BRIDGE_WRONG_NUMBER_OF_INPUTS="Wrong number of note inputs"
 #! BRIDGE script: do nothing. Holds relayer event data in its inputs
 #!
 #! Inputs:  Relayer event serialized data
-
 begin
     # store the note inputs to memory starting at address 0
     push.0 exec.note::get_inputs
