@@ -22,7 +22,7 @@ const.INPUTS_INDEX_LOC=1
 
 #! Burns fungible assets and emits public notes with BRIDGE_EVENT tag and event payload in its inputs
 #!
-#! Inputs: 
+#! Inputs:
 #!   - OUTPUT_NOTE_SERIAL_NUM
 #!   - ASSET
 #!   - dest_chain_id
@@ -72,9 +72,9 @@ export.bridge.2
     # Pad to 8 elements
     loc_load.INPUTS_NUM_WORDS_LOC u32mod.2
     if.true
-      padw loc_load.INPUTS_NUM_WORDS_LOC mul.4 add.INPUTS_SLOT mem_storew
-      dropw
-      loc_load.INPUTS_NUM_WORDS_LOC add.1 loc_store.INPUTS_NUM_WORDS_LOC
+        padw loc_load.INPUTS_NUM_WORDS_LOC mul.4 add.INPUTS_SLOT mem_storew
+        dropw
+        loc_load.INPUTS_NUM_WORDS_LOC add.1 loc_store.INPUTS_NUM_WORDS_LOC
     end
 
     loc_load.INPUTS_NUM_WORDS_LOC mul.4 push.INPUTS_SLOT
@@ -92,6 +92,7 @@ export.bridge.2
 
     push.1.1.0.BRIDGE_EVENT_TAG
     # => [tag, aux, note_type, execution_hint, RECIPIENT]
+
     exec.tx::create_note
     # => [note_idx, pad(15)]
 
