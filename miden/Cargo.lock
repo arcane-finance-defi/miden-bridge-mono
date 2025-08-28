@@ -683,6 +683,7 @@ dependencies = [
  "miden-assembly",
  "miden-lib",
  "miden-objects",
+ "miden-processor",
  "miden-prover",
  "miden-stdlib",
  "miden-testing",
@@ -858,9 +859,9 @@ dependencies = [
 
 [[package]]
 name = "miden-testing"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20801e4918082b41b78d85d6261d836caa7f5dbe3552a82b14073c100e648366"
+checksum = "2fbc67b7871be0f1acf78f98d5b55996d44445960d2415e346661b331335f8c1"
 dependencies = [
  "anyhow",
  "async-trait",

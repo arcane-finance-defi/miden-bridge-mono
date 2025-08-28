@@ -29,7 +29,8 @@ miden-lib = { version = "0.10.0", default-features = false }
 miden-objects = { version = "0.10.0", features = ["testing"], default-features = false }
 miden-tx = { version = "0.10.0", features = ["testing"], default-features = false }
 miden-prover = { version = "^0.15.0", default-features = false }
-miden-testing = "0.10.0"
+miden-testing = { version = "0.10.1", features = ["std"] }
+vm-processor = { package = "miden-processor", version = "0.15", default-features = false }
 
 
 [build-dependencies]

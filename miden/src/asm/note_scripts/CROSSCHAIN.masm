@@ -1,16 +1,20 @@
 use.miden::account
 use.miden::note
+use.miden::tx
 use.bridge::fungible_wrapper
 use.std::sys
 
 # ERRORS
 # =================================================================================================
 
-# CROSSCHAIN script expects gte 12 note inputs
-const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_INPUTS="Should contain at least 12 inputs"
+# CROSSCHAIN script expects gte 13 note inputs
+const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_INPUTS="Should contain at least 13 inputs"
 
 # CROSSCHAIN script expects exactly 1 asset
 const.ERR_CROSSCHAIN_WRONG_NUMBER_OF_ASSETS="Should contain exactly 1 asset"
+
+# CROSSCHAIN script execution too early
+const.ERR_CROSSCHAIN_TOO_EARLY_EXECUTION="Should execute only after unblock_timestamp"
 
 
 # CONSTANTS
@@ -33,6 +37,7 @@ const.INPUTS_PTR=16
 #!   - dest_chain_addr_felt1
 #!   - dest_chain_addr_felt2
 #!   - dest_chain_addr_felt3
+#!   - unblock_timestamp
 #!   - calldata_bytes_length
 #!   - calldata
 #!   - call_addr_felt1
@@ -45,7 +50,7 @@ begin
 
     dup u32divmod.4 neq.0 add dup mem_store.INPUTS_NUM_PTR sub.1 mem_store.INPUTS_INDEX_PTR
 
-    gte.12 assert.err=ERR_CROSSCHAIN_WRONG_NUMBER_OF_INPUTS
+    gte.13 assert.err=ERR_CROSSCHAIN_WRONG_NUMBER_OF_INPUTS
     drop
 
     push.ASSETS_PTR exec.note::get_assets
@@ -54,12 +59,22 @@ begin
     eq.1 assert.err=ERR_CROSSCHAIN_WRONG_NUMBER_OF_ASSETS
     drop
 
-
     mem_load.INPUTS_INDEX_PTR gt.0
     while.true
         padw mem_load.INPUTS_INDEX_PTR mul.4 add.INPUTS_PTR mem_loadw
         mem_load.INPUTS_INDEX_PTR sub.1 mem_store.INPUTS_INDEX_PTR
         mem_load.INPUTS_INDEX_PTR gt.0
+    end
+
+    movup.7 dup gt.0
+    # => [is_unblock_timestamp_greater_than_zero, unblock_timestamp, ...]
+    debug.stack
+
+    if.true
+        exec.tx::get_block_timestamp
+        debug.stack
+        # => [current_timestamp, unblock_timestamp]
+        lt assert.err=ERR_CROSSCHAIN_TOO_EARLY_EXECUTION
     end
 
     padw mem_loadw.ASSETS_PTR
