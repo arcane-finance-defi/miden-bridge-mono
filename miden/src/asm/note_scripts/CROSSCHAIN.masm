@@ -25,7 +25,6 @@ const.INPUTS_INDEX_PTR=1
 const.ASSETS_PTR=8
 const.INPUTS_PTR=16
 
-
 #! CROSSCHAIN script: burns the asset and emits the bridge exit event as public note
 #!
 #! Requires that the account exposes:
@@ -68,11 +67,9 @@ begin
 
     movup.7 dup gt.0
     # => [is_unblock_timestamp_greater_than_zero, unblock_timestamp, ...]
-    debug.stack
 
     if.true
         exec.tx::get_block_timestamp
-        debug.stack
         # => [current_timestamp, unblock_timestamp]
         lt assert.err=ERR_CROSSCHAIN_TOO_EARLY_EXECUTION
     end

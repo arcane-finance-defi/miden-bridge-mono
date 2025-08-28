@@ -1,4 +1,12 @@
-use miden_objects::{account::AccountId, asset::FungibleAsset, note::{Note, NoteAssets, NoteExecutionHint, NoteExecutionMode, NoteInputs, NoteMetadata, NoteRecipient, NoteTag, NoteType}, Felt, FieldElement, NoteError, Word};
+use miden_objects::{
+    account::AccountId,
+    asset::FungibleAsset,
+    note::{
+        Note, NoteAssets, NoteExecutionHint, NoteInputs, NoteMetadata, NoteRecipient, NoteTag,
+        NoteType,
+    },
+    Felt, FieldElement, NoteError, Word,
+};
 
 use super::bridge::croschain;
 
@@ -11,26 +19,22 @@ pub fn new_crosschain_note(
     faucet_id: AccountId,
     asset_amount: u64,
     sender: AccountId,
-    note_tag: NoteTag
+    note_tag: NoteTag,
 ) -> Result<Note, NoteError> {
     let note = Note::new(
-        NoteAssets::new(
-            vec![
-                FungibleAsset::new(faucet_id, asset_amount)
-                    .map_err(|e| NoteError::AddFungibleAssetBalanceError(e))?
-                    .into()
-            ]
-        )?, 
+        NoteAssets::new(vec![FungibleAsset::new(faucet_id, asset_amount)
+            .map_err(|e| NoteError::AddFungibleAssetBalanceError(e))?
+            .into()])?,
         NoteMetadata::new(
-            sender, 
-            NoteType::Private, 
+            sender,
+            NoteType::Private,
             note_tag,
-            NoteExecutionHint::always(), 
-            Felt::ZERO
-        )?, 
+            NoteExecutionHint::always(),
+            Felt::ZERO,
+        )?,
         NoteRecipient::new(
-            serial_number, 
-            croschain(), 
+            serial_number,
+            croschain(),
             NoteInputs::new(vec![
                 output_serial_number[3],
                 output_serial_number[2],
@@ -45,8 +49,8 @@ pub fn new_crosschain_note(
                 Felt::ZERO,
                 Felt::ZERO,
                 Felt::ZERO,
-            ])?
-        )
+            ])?,
+        ),
     );
 
     Ok(note)

@@ -1,14 +1,27 @@
-use miden_lib::account::auth::{RpoFalcon512, RpoFalcon512ProcedureAcl};
-use miden_lib::transaction::TransactionKernel;
-use miden_objects::account::{AccountId, AccountStorageMode, AuthSecretKey};
-use miden_objects::asset::{FungibleAsset, TokenSymbol};
-use miden_objects::{Felt, FieldElement, Word};
-use miden_objects::crypto::dsa::rpo_falcon512::{PublicKey, SecretKey};
-use miden_objects::crypto::rand::{FeltRng, RpoRandomCoin};
-use miden_objects::note::{Note, NoteAssets, NoteExecutionHint, NoteId, NoteInputs, NoteMetadata, NoteRecipient, NoteTag, NoteType};
-use miden_objects::testing::account_id::ACCOUNT_ID_SENDER;
-use miden_objects::transaction::{OutputNote, TransactionScript};
-use miden_objects::utils::word_to_masm_push_string;
+use miden_bridge::{
+    accounts::{testing::create_token_wrapper_account_builder, token_wrapper::bridge_note_tag},
+    notes::bridge::{bridge, croschain},
+};
+use miden_lib::{
+    account::{auth::RpoFalcon512ProcedureAcl, faucets::BasicFungibleFaucet},
+    transaction::TransactionKernel,
+};
+use miden_objects::{
+    account::{AccountId, AccountStorageMode, AuthSecretKey},
+    asset::{FungibleAsset, TokenSymbol},
+    crypto::{
+        dsa::rpo_falcon512::{PublicKey, SecretKey},
+        rand::{FeltRng, RpoRandomCoin},
+    },
+    note::{
+        Note, NoteAssets, NoteExecutionHint, NoteId, NoteInputs, NoteMetadata, NoteRecipient,
+        NoteTag, NoteType,
+    },
+    testing::account_id::ACCOUNT_ID_SENDER,
+    transaction::{OutputNote, TransactionScript},
+    utils::word_to_masm_push_string,
+    Felt, FieldElement, Word,
+};
 use miden_testing::{AccountState, Auth, MockChain};
 use miden_bridge::accounts::{token_wrapper::bridge_note_tag, testing::create_token_wrapper_account_builder};
 use miden_bridge::notes::bridge::{bridge, croschain};
@@ -20,10 +33,7 @@ pub fn get_new_pk_and_authenticator(seed: [Felt; 4]) -> (PublicKey, AuthSecretKe
     let seed = Word::from(seed);
     let mut rng = RpoRandomCoin::new(seed);
     let sec_key = SecretKey::with_rng(&mut rng);
-    (
-        sec_key.public_key(),
-        AuthSecretKey::RpoFalcon512(sec_key),
-    )
+    (sec_key.public_key(), AuthSecretKey::RpoFalcon512(sec_key))
 }
 
 const DAY: u32 = 60 * 60 * 24;
@@ -32,12 +42,8 @@ const DAY: u32 = 60 * 60 * 24;
 fn should_issue_public_bridge_note() -> anyhow::Result<()> {
     let mut mock_chain = MockChain::new();
 
-    let (pub_key, _secret_key) = get_new_pk_and_authenticator([
-        Felt::new(1),
-        Felt::new(2),
-        Felt::new(3),
-        Felt::new(4)
-    ]);
+    let (pub_key, _secret_key) =
+        get_new_pk_and_authenticator([Felt::new(1), Felt::new(2), Felt::new(3), Felt::new(4)]);
 
     let wrapper_builder = create_token_wrapper_account_builder(
         [1; 32],
@@ -45,51 +51,40 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         6,
         Felt::new(1000000),
         1,
-        [Felt::new(1),Felt::new(1),Felt::new(1)],
+        [Felt::new(1), Felt::new(1), Felt::new(1)],
         AccountStorageMode::Public,
     )?;
 
-    wrapper_builder.clone()
-        .with_auth_component(
-            RpoFalcon512ProcedureAcl::new(
-                pub_key,
-                vec![BasicFungibleFaucet::distribute_digest()]
-            )?
-        )
+    wrapper_builder
+        .clone()
+        .with_auth_component(RpoFalcon512ProcedureAcl::new(
+            pub_key,
+            vec![BasicFungibleFaucet::distribute_digest()],
+        )?)
         .build()?;
 
     let mut wrapper = mock_chain.add_pending_account_from_builder(
-        Auth::ProcedureAcl {auth_trigger_procedures: vec![BasicFungibleFaucet::distribute_digest()]},
+        Auth::ProcedureAcl {
+            auth_trigger_procedures: vec![BasicFungibleFaucet::distribute_digest()],
+        },
         wrapper_builder,
-        AccountState::Exists
+        AccountState::Exists,
     )?;
 
-
-    let fungible_asset =
-        FungibleAsset::new(wrapper.id(), 1000)
-            .unwrap()
-            .into();
+    let fungible_asset = FungibleAsset::new(wrapper.id(), 1000).unwrap().into();
 
     let mut rng = RpoRandomCoin::new(Word::from([
         Felt::new(456),
         Felt::new(456),
         Felt::new(456),
-        Felt::new(456)
+        Felt::new(456),
     ]));
 
     let output_serial_num = rng.draw_word();
 
-    let receiver_address = [
-        rng.draw_element(),
-        rng.draw_element(),
-        rng.draw_element(),
-    ];
+    let receiver_address = [rng.draw_element(), rng.draw_element(), rng.draw_element()];
 
-    let call_address = [
-        Felt::ZERO,
-        Felt::ZERO,
-        Felt::ZERO,
-    ];
+    let call_address = [Felt::ZERO, Felt::ZERO, Felt::ZERO];
 
     let chain_id: u64 = 123;
     let unlock_timestamp = mock_chain.latest_block_header().timestamp() + 7 * DAY;
@@ -117,24 +112,19 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
             NoteType::Public,
             NoteTag::from_account_id(wrapper.id()),
             NoteExecutionHint::Always,
-            Felt::ZERO
+            Felt::ZERO,
         )?,
         NoteRecipient::new(
             [Felt::new(1), Felt::ZERO, Felt::ZERO, Felt::ZERO],
             croschain(),
-            note_inputs
-        )
+            note_inputs,
+        ),
     );
 
     mock_chain.add_pending_note(OutputNote::Full(note.clone()));
     mock_chain.prove_next_block().expect("Unable to prove next block");
 
-    let mint_tx_inputs = mock_chain.get_transaction_inputs(
-        wrapper.clone(),
-        None,
-        &[],
-        &[]
-    )?;
+    let mint_tx_inputs = mock_chain.get_transaction_inputs(wrapper.clone(), None, &[], &[])?;
 
     let mint_tx_script_code = format!(
         "
@@ -160,7 +150,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         note_type = Felt::from(NoteType::Private),
         recipient = word_to_masm_push_string(&rng.draw_word()),
         aux = 0,
-        tag = Felt::from(NoteTag::for_local_use_case(0,0)?),
+        tag = Felt::from(NoteTag::for_local_use_case(0, 0)?),
         note_execution_hint = Felt::from(NoteExecutionHint::Always),
         amount = 10000
     );
@@ -201,13 +191,11 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
             call_address[0],
             call_address[1],
             call_address[2],
-        ])?
+        ])?,
     );
 
-    let expected_note_id = NoteId::new(
-        expected_recipient.digest(),
-        NoteAssets::new(vec![])?.commitment()
-    );
+    let expected_note_id =
+        NoteId::new(expected_recipient.digest(), NoteAssets::new(vec![])?.commitment());
 
     let expected_note = Note::new(
         NoteAssets::new(vec![])?,
@@ -216,18 +204,13 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
             NoteType::Public,
             bridge_note_tag(),
             NoteExecutionHint::Always,
-            Felt::ZERO
+            Felt::ZERO,
         )?,
-        expected_recipient.clone()
+        expected_recipient.clone(),
     );
 
-    let tx_inputs = mock_chain.
-        get_transaction_inputs(
-            wrapper.clone(),
-            None,
-            &[note.clone().id()],
-            &[]
-        )?;
+    let tx_inputs =
+        mock_chain.get_transaction_inputs(wrapper.clone(), None, &[note.clone().id()], &[])?;
 
 
     let failed_executed_transaction = mock_chain.build_tx_context(
@@ -268,7 +251,10 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         .execute().expect("Unable to execute crosschain consume transaction");
 
     assert_eq!(executed_transaction.output_notes().num_notes(), 1);
-    assert_eq!(executed_transaction.output_notes().get_note(0).metadata().tag(), bridge_note_tag());
+    assert_eq!(
+        executed_transaction.output_notes().get_note(0).metadata().tag(),
+        bridge_note_tag()
+    );
     assert_eq!(executed_transaction.output_notes().get_note(0).id(), expected_note_id);
 
     Ok(())

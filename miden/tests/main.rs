@@ -1,7 +1,6 @@
 extern crate alloc;
 use vm_processor::utils::Deserializable;
 
-
 mod account;
 // HELPER FUNCTIONS
 // ================================================================================================
@@ -33,4 +32,3 @@ macro_rules! assert_transaction_executor_error {
         }
     };
 }
-
