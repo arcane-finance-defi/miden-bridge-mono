@@ -23,9 +23,6 @@ use miden_objects::{
     Felt, FieldElement, Word,
 };
 use miden_testing::{AccountState, Auth, MockChain};
-use miden_bridge::accounts::{token_wrapper::bridge_note_tag, testing::create_token_wrapper_account_builder};
-use miden_bridge::notes::bridge::{bridge, croschain};
-use miden_lib::account::faucets::BasicFungibleFaucet;
 use miden_bridge::errors::note_errors::ERR_CROSSCHAIN_TOO_EARLY_EXECUTION;
 use crate::assert_transaction_executor_error;
 
