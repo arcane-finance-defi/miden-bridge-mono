@@ -72,6 +72,8 @@ begin
         exec.tx::get_block_timestamp
         # => [current_timestamp, unblock_timestamp]
         lt assert.err=ERR_CROSSCHAIN_TOO_EARLY_EXECUTION
+    else
+        drop
     end
 
     padw mem_loadw.ASSETS_PTR
