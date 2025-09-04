@@ -51,7 +51,7 @@ Amoy Contracts:
 
 The client to interact with the bridge is [the modified Miden CLI tool](https://github.com/arcane-finance-defi/miden-bridge-cli) that supports crosschain interactions. You should install it with
 
-`cargo install --git https://github.com/arcane-finance-defi/miden-bridge-cli miden-cli`
+`cargo install --git https://github.com/arcane-finance-defi/miden-bridge-cli miden-client-cli`
 command
 
 ## Prerequisites
