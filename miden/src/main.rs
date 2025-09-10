@@ -56,7 +56,9 @@ pub fn main() -> Result<(), CliError> {
 }
 
 fn build_recipient(receiver: String) -> Result<(), CliError> {
-    let mut rng = RpoRandomCoin::new([Felt::new(1), Felt::new(2), Felt::new(3), Felt::new(4)]);
+    let mut rng = RpoRandomCoin::new(Word::new(
+        [Felt::new(1), Felt::new(2), Felt::new(3), Felt::new(4)]
+    ));
 
     let serial_number: Word = rng.draw_word();
     let receiver =
@@ -87,7 +89,7 @@ fn restore_note(
     let receiver =
         AccountId::from_hex(&receiver.as_str()).map_err(|e| CliError::ParseAccountIdError(e))?;
 
-    let recipient = build_p2id_recipient(receiver, serial_number.clone())
+    let recipient = build_p2id_recipient(receiver, Word::new(serial_number.clone()))
         .map_err(|e| CliError::BuildNoteRecipientError(e))?;
 
     let faucet_id =

@@ -8,17 +8,12 @@ use std::{
     sync::Arc,
 };
 
-use miden_assembly::Report;
+use miden_assembly::{LinkLibraryKind, Report};
 use miden_lib::transaction::TransactionKernel;
-use miden_objects::{
-    assembly::{
-        diagnostics::{IntoDiagnostic, Result},
-        Assembler, DefaultSourceManager, Library, LibraryPath, Module, ModuleKind,
-    },
-    crypto::hash::rpo::RpoDigest,
-    note::{NoteScript, NoteTag},
-    utils::Serializable,
-};
+use miden_objects::{assembly::{
+    diagnostics::{IntoDiagnostic, Result},
+    Assembler, DefaultSourceManager, Library, LibraryPath, Module, ModuleKind,
+}, note::{NoteScript, NoteTag}, utils::Serializable, Word};
 use regex::Regex;
 use walkdir::WalkDir;
 
@@ -122,7 +117,7 @@ fn compile_note_scripts(source_dir: &Path, target_dir: &Path, assembler: Assembl
 fn compile_event_note_scripts(
     source_dir: &Path,
     target_dir: &Path,
-) -> Result<BTreeMap<OsString, RpoDigest>> {
+) -> Result<BTreeMap<OsString, Word>> {
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
     }
@@ -170,7 +165,7 @@ pub fn create_library(
 fn compile_contracts(
     source_dir: &Path,
     target_dir: &Path,
-    note_code_commitments: BTreeMap<OsString, RpoDigest>,
+    note_code_commitments: BTreeMap<OsString, Word>,
 ) -> Result<Assembler, Report> {
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
@@ -222,7 +217,7 @@ fn compile_contracts(
             replaced_component_code.as_str(),
         )?;
 
-        assembler.add_library(library.clone())?;
+        assembler.link_library(library.clone(), LinkLibraryKind::Dynamic)?;
 
         let component_file_path = target_dir.join(name).with_extension(Library::LIBRARY_EXTENSION);
         library.write_to_file(component_file_path).into_diagnostic()?;

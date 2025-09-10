@@ -9,7 +9,6 @@ rust-version = "1.87"
 [features]
 default = ["std"]
 std = ["miden-assembly/std", "miden-objects/std", "miden-stdlib/std", "miden-lib/std", "miden-tx/std", "hex/std"]
-async = ["miden-tx/async"]
 # the testing feature is required to enable the account creation pow patch
 testing = ["miden-objects/testing", "miden-tx/testing", "miden-lib/testing"]
 with-debug-info = ["miden-stdlib/with-debug-info"]
@@ -17,29 +16,28 @@ with-debug-info = ["miden-stdlib/with-debug-info"]
 [dependencies]
 alloy-primitives = { version = "1.0.0", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-miden-lib = { version = "0.10.0", default-features = false }
-miden-objects = { version = "0.10.0", default-features = false }
-miden-stdlib = { version = "^0.15.0", default-features = false }
-miden-tx = { version = "0.10.0", default-features = false }
+miden-lib = { version = "0.11.2", default-features = false }
+miden-objects = { version = "0.11.2", default-features = false }
+miden-stdlib = { version = "^0.17.1", default-features = false }
+miden-tx = { version = "0.11.2", default-features = false }
 thiserror = "2.0.12"
 anyhow = "1.0.98"
 
 [dev-dependencies]
-miden-lib = { version = "0.10.0", default-features = false }
-miden-objects = { version = "0.10.0", features = ["testing"], default-features = false }
-miden-tx = { version = "0.10.0", features = ["testing"], default-features = false }
-miden-prover = { version = "^0.15.0", default-features = false }
-miden-testing = { version = "0.10.1", features = ["std"] }
-vm-processor = { package = "miden-processor", version = "0.15", default-features = false }
+miden-lib = { version = "0.11.2", default-features = false }
+miden-objects = { version = "0.11.2", features = ["testing"], default-features = false }
+miden-tx = { version = "0.11.2", features = ["testing"], default-features = false }
+miden-testing = { version = "0.11.2", features = ["std"] }
+vm-processor = { package = "miden-processor", version = "0.17.1", default-features = false }
 
 
 [build-dependencies]
 regex = { version = "1.10" }
 walkdir = { version = "2.5" }
-miden-assembly = { version = "^0.15.0", default-features = false }
-miden-stdlib = { version = "^0.15.0", default-features = false }
-miden-lib = { version = "0.10.0", default-features = false }
-miden-objects = { version = "0.10.0", default-features = false }
+miden-assembly = { version = "0.17.1", default-features = false }
+miden-stdlib = { version = "0.17.1", default-features = false }
+miden-lib = { version = "0.11.2", default-features = false }
+miden-objects = { version = "0.11.2", default-features = false }
 
 [profile.test-release]
 inherits = "release"

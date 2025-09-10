@@ -1,5 +1,5 @@
 use miden_lib::{
-    account::{auth::RpoFalcon512ProcedureAcl, faucets::BasicFungibleFaucet},
+    account::{auth::{AuthRpoFalcon512Acl, AuthRpoFalcon512AclConfig}, faucets::BasicFungibleFaucet},
     AuthScheme,
 };
 use miden_objects::{
@@ -39,17 +39,19 @@ impl TokenWrapperAccount {
 
 impl From<TokenWrapperAccount> for AccountComponent {
     fn from(faucet: TokenWrapperAccount) -> Self {
-        AccountComponent::new(token_wrapper_account_library(), vec![
-            StorageSlot::Value([
-                Felt::new(faucet.origin_network),
-                faucet.origin_address[2],
-                faucet.origin_address[1],
-                faucet.origin_address[0],
-            ])
-        ])
-            .expect("basic fungible faucet component should satisfy the requirements of a valid account component")
-            .with_supported_type(AccountType::FungibleFaucet)
-    }
+        AccountComponent::new(
+            token_wrapper_account_library(),
+            vec![
+                StorageSlot::Value(Word::new([
+                    Felt::new(faucet.origin_network),
+                    faucet.origin_address[2],
+                    faucet.origin_address[1],
+                    faucet.origin_address[0],
+                ]))
+            ]).expect("basic fungible faucet component should satisfy the requirements of a valid account component")
+                .with_supported_type(AccountType::FungibleFaucet)
+        }
+
 }
 
 fn builder_internal(
@@ -81,11 +83,16 @@ pub fn create_token_wrapper_account(
     account_storage_mode: AccountStorageMode,
     auth_scheme: AuthScheme,
 ) -> Result<(Account, Word), AccountError> {
-    let auth_component: RpoFalcon512ProcedureAcl = match auth_scheme {
+    let auth_component: AuthRpoFalcon512Acl = match auth_scheme {
         AuthScheme::RpoFalcon512 { pub_key } => {
-            RpoFalcon512ProcedureAcl::new(pub_key, vec![BasicFungibleFaucet::distribute_digest()])?
+            Ok(AuthRpoFalcon512Acl::new(pub_key, AuthRpoFalcon512AclConfig::new().with_auth_trigger_procedures(
+                vec![BasicFungibleFaucet::distribute_digest()]
+            ))?)
         },
-    };
+        _ => {
+            Err(AccountError::other("unsupported auth scheme"))
+        }
+    }?;
 
     let (account, account_seed) = builder_internal(
         init_seed,

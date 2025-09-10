@@ -3,9 +3,10 @@ use miden_bridge::{
     notes::bridge::{bridge, croschain},
 };
 use miden_lib::{
-    account::{auth::RpoFalcon512ProcedureAcl, faucets::BasicFungibleFaucet},
+    account::{auth::{AuthRpoFalcon512Acl, AuthRpoFalcon512AclConfig}, faucets::BasicFungibleFaucet},
     transaction::TransactionKernel,
 };
+use miden_lib::utils::ScriptBuilder;
 use miden_objects::{
     account::{AccountId, AccountStorageMode, AuthSecretKey},
     asset::{FungibleAsset, TokenSymbol},
@@ -19,7 +20,6 @@ use miden_objects::{
     },
     testing::account_id::ACCOUNT_ID_SENDER,
     transaction::{OutputNote, TransactionScript},
-    utils::word_to_masm_push_string,
     Felt, FieldElement, Word,
 };
 use miden_testing::{AccountState, Auth, MockChain};
@@ -37,7 +37,7 @@ const DAY: u32 = 60 * 60 * 24;
 
 #[test]
 fn should_issue_public_bridge_note() -> anyhow::Result<()> {
-    let mut mock_chain = MockChain::new();
+    let mut mock_chain_builder = MockChain::builder();
 
     let (pub_key, _secret_key) =
         get_new_pk_and_authenticator([Felt::new(1), Felt::new(2), Felt::new(3), Felt::new(4)]);
@@ -54,19 +54,25 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
 
     wrapper_builder
         .clone()
-        .with_auth_component(RpoFalcon512ProcedureAcl::new(
+        .with_auth_component(AuthRpoFalcon512Acl::new(
             pub_key,
-            vec![BasicFungibleFaucet::distribute_digest()],
+            AuthRpoFalcon512AclConfig::new().with_auth_trigger_procedures(
+                vec![BasicFungibleFaucet::distribute_digest()]
+            ),
         )?)
         .build()?;
 
-    let mut wrapper = mock_chain.add_pending_account_from_builder(
-        Auth::ProcedureAcl {
+    let mut wrapper = mock_chain_builder.add_account_from_builder(
+        Auth::Acl {
             auth_trigger_procedures: vec![BasicFungibleFaucet::distribute_digest()],
+            allow_unauthorized_input_notes: true,
+            allow_unauthorized_output_notes: true
         },
-        wrapper_builder,
+        wrapper_builder.clone(),
         AccountState::Exists,
     )?;
+
+    let mut mock_chain = mock_chain_builder.build()?;
 
     let fungible_asset = FungibleAsset::new(wrapper.id(), 1000).unwrap().into();
 
@@ -112,7 +118,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
             Felt::ZERO,
         )?,
         NoteRecipient::new(
-            [Felt::new(1), Felt::ZERO, Felt::ZERO, Felt::ZERO],
+            Word::new([Felt::new(1), Felt::ZERO, Felt::ZERO, Felt::ZERO]),
             croschain(),
             note_inputs,
         ),
@@ -145,7 +151,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
             end
             ",
         note_type = Felt::from(NoteType::Private),
-        recipient = word_to_masm_push_string(&rng.draw_word()),
+        recipient = rng.draw_word(),
         aux = 0,
         tag = Felt::from(NoteTag::for_local_use_case(0, 0)?),
         note_execution_hint = Felt::from(NoteExecutionHint::Always),
@@ -153,7 +159,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
     );
 
     let mint_tx_script =
-        TransactionScript::compile(mint_tx_script_code, TransactionKernel::testing_assembler())?;
+        ScriptBuilder::default().compile_tx_script(mint_tx_script_code)?;
 
     let executed_mint_transaction = mock_chain.build_tx_context(
             wrapper.clone(),
@@ -163,7 +169,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
             .tx_script(mint_tx_script)
             .tx_inputs(mint_tx_inputs)
             .build()?
-            .execute().expect("Unable to execute mint tx");
+            .execute_blocking().expect("Unable to execute mint tx");
 
     mock_chain.add_pending_executed_transaction(&executed_mint_transaction.clone())?;
     mock_chain.prove_next_block()?;
@@ -218,7 +224,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
             .tx_inputs(tx_inputs)
             .extend_expected_output_notes(vec![OutputNote::Full(expected_note.clone())])
             .build()?
-            .execute();
+            .execute_blocking();
 
     assert_transaction_executor_error!(
         failed_executed_transaction,
@@ -245,7 +251,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         .tx_inputs(tx_inputs.clone())
         .extend_expected_output_notes(vec![OutputNote::Full(expected_note.clone())])
         .build()?
-        .execute().expect("Unable to execute crosschain consume transaction");
+        .execute_blocking().expect("Unable to execute crosschain consume transaction");
 
     assert_eq!(executed_transaction.output_notes().num_notes(), 1);
     assert_eq!(
