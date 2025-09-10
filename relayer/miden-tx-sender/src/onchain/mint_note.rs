@@ -2,6 +2,7 @@ use miden_bridge::notes::BRIDGE_USECASE;
 use crate::onchain::client::execute_tx;
 use crate::onchain::errors::OnchainError;
 use miden_client::Client;
+use miden_client::keystore::FilesystemKeyStore;
 use miden_client::transaction::{TransactionRequestBuilder, TransactionResult};
 use miden_objects::Word;
 use miden_objects::Felt;
@@ -11,6 +12,7 @@ use miden_objects::note::{
     NoteAssets, NoteExecutionHint, NoteMetadata, NoteTag, NoteType, PartialNote,
 };
 use miden_objects::transaction::OutputNote;
+use rand::rngs::StdRng;
 use serde::{Deserialize, Serialize};
 use crate::onchain::asset::Asset;
 
@@ -32,7 +34,7 @@ pub struct MintedNote {
 }
 
 pub async fn mint_asset(
-    client: &mut Client,
+    client: &mut Client<FilesystemKeyStore<StdRng>>,
     faucet_id: AccountId,
     recipient: Word,
     amount: u64,

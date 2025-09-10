@@ -2,9 +2,11 @@ use std::collections::HashMap;
 use miden_bridge::accounts::token_wrapper::bridge_note_tag;
 use miden_bridge::utils::felts_to_evm_addresses;
 use miden_client::Client;
+use miden_client::keystore::FilesystemKeyStore;
 use miden_client::store::{InputNoteRecord, NoteFilter};
 use miden_objects::block::BlockNumber;
 use miden_objects::utils::ToHex;
+use rand::rngs::StdRng;
 use rocket::serde::{Deserialize, Serialize};
 use crate::onchain::asset::Asset;
 use crate::onchain::errors::OnchainError;
@@ -32,7 +34,7 @@ pub struct PolledEvents {
 }
 
 pub async fn poll_events(
-    storage_client: &mut Client,
+    storage_client: &mut Client<FilesystemKeyStore<StdRng>>,
     from: BlockNumber
 ) -> Result<PolledEvents, OnchainError> {
     storage_client.sync_state().await.map_err(OnchainError::from)?;

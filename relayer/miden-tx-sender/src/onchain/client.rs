@@ -21,6 +21,7 @@ use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use miden_bridge::accounts::token_wrapper::bridge_note_tag;
 use miden_bridge::utils::evm_address_to_felts;
+use tokio::runtime;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender as OneshotSender;
@@ -69,7 +70,7 @@ impl OnchainClient {
 }
 
 pub async fn execute_tx(
-    execution_client: &mut Client,
+    execution_client: &mut Client<FilesystemKeyStore<StdRng>>,
     tx: TransactionRequest,
     faucet_id: AccountId,
 ) -> Result<TransactionResult, OnchainError> {
@@ -94,13 +95,13 @@ pub enum ClientCommand {
     }
 }
 
-async fn get_sync_height(execution_client: &mut Client) -> Result<BlockNumber, OnchainError> {
+async fn get_sync_height(execution_client: &mut Client<FilesystemKeyStore<StdRng>>) -> Result<BlockNumber, OnchainError> {
     execution_client.sync_state().await?;
     execution_client.get_sync_height().await.map_err(OnchainError::MidenClientError)
 }
 
 async fn mint_note(
-    execution_client: &mut Client,
+    execution_client: &mut Client<FilesystemKeyStore<StdRng>>,
     keystore: &FilesystemKeyStore<StdRng>,
     assets_store: &Store,
     recipient: Word,
@@ -164,13 +165,13 @@ pub fn client_process_loop(
 
     let keystore = Arc::new(FilesystemKeyStore::new("./keystore".into()).unwrap());
 
-    let rng = RpoRandomCoin::new(coin_seed.map(Felt::new));
+    let rng = RpoRandomCoin::new(Word::from(coin_seed.map(Felt::new)));
     let mut execution_client =
-        Client::new(
+        runtime.block_on(Client::new(
             client.rpc.clone(),
             Box::new(rng),
             miden_client_store,
-            keystore.clone(),
+            Some(keystore.clone()),
             ExecutionOptions::new(
                 Some(MAX_TX_EXECUTION_CYCLES),
                 MIN_TX_EXECUTION_CYCLES,
@@ -179,7 +180,7 @@ pub fn client_process_loop(
             ).unwrap(),
             None,
             None
-        );
+        )).unwrap();
 
     runtime.block_on(execution_client.add_note_tag(bridge_note_tag())).unwrap();
     runtime.block_on(execution_client.sync_state()).unwrap();

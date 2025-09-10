@@ -16,7 +16,7 @@ use crate::onchain::mint_note::{mint_asset, MintArgs, MintedNote};
 use crate::onchain::OnchainClient;
 use dotenv::dotenv;
 use miden_bridge::accounts::token_wrapper::TokenWrapperAccount;
-use miden_client::account::component::{BasicFungibleFaucet, BasicWallet, RpoFalcon512};
+use miden_client::account::component::{BasicFungibleFaucet, BasicWallet, AuthRpoFalcon512};
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::note::get_input_note_with_id_prefix;
 use miden_client::rpc::NodeRpcClient;
@@ -26,12 +26,10 @@ use miden_client::transaction::{TransactionRequest, TransactionRequestBuilder};
 use miden_client::utils::Deserializable;
 use miden_client::{Client, ClientError, Felt};
 use miden_crypto::dsa::rpo_falcon512::SecretKey;
-use miden_objects::crypto::hash::rpo::RpoDigest;
 use miden_crypto::rand::RpoRandomCoin;
-use miden_crypto::Word;
-use miden_objects::account::{
+use miden_objects::{Word, account::{
     Account, AccountBuilder, AccountId, AccountStorageMode, AccountType, AuthSecretKey,
-};
+}};
 use miden_objects::asset::{FungibleAsset, TokenSymbol};
 use miden_objects::block::BlockNumber;
 use miden_objects::note::{Note, NoteFile, NoteType};
@@ -56,8 +54,8 @@ async fn mint_note(
     mint_args: Json<MintArgs>,
     state: &RocketState<State>,
 ) -> Result<Json<MintedNote>, (Status, Json<ErrorResponse>)> {
-    let recipient = parse_hex_string_as_word(&mint_args.recipient)
-        .map_err(|e| (Status::BadRequest, Json(ErrorResponse { error: e.to_string() })))?;
+    let recipient = Word::from(parse_hex_string_as_word(&mint_args.recipient)
+        .map_err(|e| (Status::BadRequest, Json(ErrorResponse { error: e.to_string() })))?);
     let (tx, rx) = tokio::sync::oneshot::channel();
 
     let command = ClientCommand::MintNote {
