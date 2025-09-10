@@ -45,7 +45,7 @@ Amoy Contracts:
 
 ## Supported assets
 
-- USDC Sepolia ([0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238](https://sepolia.etherscan.io/token/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238))/USDC Amoy ([0xdEE54cB0c0D153010b37E6D51AaaD6d682247E5e](https://amoy.polygonscan.com/token/0xdee54cb0c0d153010b37e6d51aaad6d682247e5e)) <=> USDC Miden ([0x63c9d7af451fda2000fa06ce0bdefd](https://testnet.midenscan.com/account/0x63c9d7af451fda2000fa06ce0bdefd))
+- USDC Sepolia ([0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238](https://sepolia.etherscan.io/token/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238))/USDC Amoy ([0xdEE54cB0c0D153010b37E6D51AaaD6d682247E5e](https://amoy.polygonscan.com/token/0xdee54cb0c0d153010b37e6d51aaad6d682247e5e)) <=> USDC Miden ([0x3452929efc547b20092a889ba8d0b2](https://testnet.midenscan.com/account/0x3452929efc547b20092a889ba8d0b2))
 
 ## How to use
 
