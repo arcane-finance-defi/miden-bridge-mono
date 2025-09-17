@@ -843,9 +843,9 @@ dependencies = [
 
 [[package]]
 name = "miden-lib"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d97cbdddaf0c2edae3b2844db1d2a4746d498e2d865ac0ff5d76b700a9221e71"
+checksum = "dad297094efbe065c677479696bb6981bc57eeb41dc3cbe506ab9c90ea7f73e4"
 dependencies = [
  "miden-assembly",
  "miden-objects",
@@ -912,9 +912,9 @@ dependencies = [
 
 [[package]]
 name = "miden-objects"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a16bce60bda18cfeaa49e99e35307c6f45297bfe2f0e18c009fa356edd552e70"
+checksum = "c0a2d46daf2b5fb6190be750625b56755aa63f9dd0d4922224b0e2780582eecf"
 dependencies = [
  "bech32",
  "getrandom",
@@ -979,9 +979,9 @@ dependencies = [
 
 [[package]]
 name = "miden-testing"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "411f9f1ed91b12e167a2d8d648d14f89b2fe6e56d6f76b1046cc26a29563e5ab"
+checksum = "8b1b68ad96285c4834f30aace0a22db73eaf3ac430217ef5d4f5de8fff05bf5d"
 dependencies = [
  "anyhow",
  "itertools",
@@ -999,9 +999,9 @@ dependencies = [
 
 [[package]]
 name = "miden-tx"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21e3b4f65ef4d94f071b354e5c8cec01aff311bf9f9376bbf905b98c6955eeb8"
+checksum = "7ad60dbf0933e9b44946e16c6555b94cdfb3c820b05b234e8c34ccc10491ddbd"
 dependencies = [
  "miden-lib",
  "miden-objects",
