@@ -8,7 +8,7 @@ use std::{
     sync::Arc,
 };
 
-use miden_assembly::{LinkLibraryKind, Report};
+use miden_assembly::Report;
 use miden_lib::transaction::TransactionKernel;
 use miden_objects::{assembly::{
     diagnostics::{IntoDiagnostic, Result},
@@ -217,7 +217,7 @@ fn compile_contracts(
             replaced_component_code.as_str(),
         )?;
 
-        assembler.link_library(library.clone(), LinkLibraryKind::Dynamic)?;
+        assembler = assembler.clone().with_dynamic_library(library.clone())?;
 
         let component_file_path = target_dir.join(name).with_extension(Library::LIBRARY_EXTENSION);
         library.write_to_file(component_file_path).into_diagnostic()?;

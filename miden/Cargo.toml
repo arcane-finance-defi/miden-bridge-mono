@@ -18,7 +18,7 @@ alloy-primitives = { version = "1.0.0", default-features = false }
 hex = { version = "0.4.3", default-features = false }
 miden-lib = { version = "0.11.4", default-features = false }
 miden-objects = { version = "0.11.4", default-features = false }
-miden-stdlib = { version = "0.17.2", default-features = false }
+miden-stdlib = { version = "0.18", default-features = false }
 miden-tx = { version = "0.11.4", default-features = false }
 thiserror = "2.0.12"
 anyhow = "1.0.98"
@@ -34,8 +34,8 @@ vm-processor = { package = "miden-processor", version = "0.18.0", default-featur
 [build-dependencies]
 regex = { version = "1.10" }
 walkdir = { version = "2.5" }
-miden-assembly = { version = "0.17.2", default-features = false }
-miden-stdlib = { version = "0.17.2", default-features = false }
+miden-assembly = { version = "0.18", default-features = false }
+miden-stdlib = { version = "0.18", default-features = false }
 miden-lib = { version = "0.11.4", default-features = false }
 miden-objects = { version = "0.11.4", default-features = false }
 
