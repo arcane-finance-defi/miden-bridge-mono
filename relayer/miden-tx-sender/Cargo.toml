@@ -8,10 +8,10 @@ rust-version = "1.87.0"
 async-sqlite = "0.5.2"
 dotenv = "0.15.0"
 miden-bridge = { path = "../../miden" }
-miden-client = { version = "0.11.3", features = ["sqlite", "tonic"] }
-miden-crypto = "0.16.1"
-miden-objects = "0.11.2"
-miden-lib = "0.11.2"
+miden-client = { version = "0.11.11", features = ["sqlite", "tonic"] }
+miden-crypto = "0.17.1"
+miden-objects = "0.11.5"
+miden-lib = "0.11.5"
 rand = "0.9"
 rocket = { version = "0.5.1", features = ["json"] }
 rusqlite = { version = "^0.36", features = ["bundled"] }
