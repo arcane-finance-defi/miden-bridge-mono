@@ -137,8 +137,8 @@ function getEd25519SignaturesOffsetEncodes() {
     ['message_data_offset', getU16Encoder()],
     ['message_data_size', getU16Encoder()],
     ['message_instruction_index', getU16Encoder()],
-    ['signature', getBytesEncoder()],
     ['public_key', getBytesEncoder()],
+    ['signature', getBytesEncoder()],
     ['message', getBytesEncoder()],
   ]);
 }
@@ -147,23 +147,23 @@ export function createEd25519InstructionData(
   publicKey: ReadonlyUint8Array, // 32 bytes
   message: Uint8Array, // your message
   signature: Uint8Array, // 64 bytes
-  instructionIndex: number = 0,
 ): ReadonlyUint8Array {
+  const signatureInstructionIndex = 65535;
   const dataEncoder = getEd25519SignaturesOffsetEncodes();
   const dataStart = 1 + 1 + 14; // 1 byte num_signatures + 1 byte padding + 14 bytes offsets
 
-  const signatureOffset = dataStart;
-  const publicKeyOffset = signatureOffset + signature.length;
-  const messageOffset = publicKeyOffset + publicKey.length;
+  const publicKeyOffset = dataStart;
+  const signatureOffset = publicKeyOffset + publicKey.length;
+  const messageOffset = signatureOffset + signature.length;
 
   const instructionData: Ed25519SignatureOffsets = {
     signature_offset: signatureOffset,
-    signature_instruction_index: instructionIndex,
+    signature_instruction_index: signatureInstructionIndex,
     public_key_offset: publicKeyOffset,
-    public_key_instruction_index: instructionIndex,
+    public_key_instruction_index: signatureInstructionIndex,
     message_data_offset: messageOffset,
     message_data_size: message.length,
-    message_instruction_index: instructionIndex,
+    message_instruction_index: signatureInstructionIndex,
     signature: signature,
     public_key: publicKey,
     message: message,
