@@ -1,3 +1,5 @@
 node_modules
 .env
 dist
+
+src/modules/relayer/generated

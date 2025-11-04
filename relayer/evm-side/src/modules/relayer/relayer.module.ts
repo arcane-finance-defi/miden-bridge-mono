@@ -5,9 +5,15 @@ import { MidenModule } from '../miden';
 import { MidenRelayerService } from './services/miden.service';
 import { EVMRelayerService } from './services/evm.service';
 import { RelayerService } from './services/relayer.service';
+import { SVMRelayerService } from './services/solana.service';
 
 @Module({
   imports: [MidenModule, MainConfigModule, RepositoriesModule],
-  providers: [RelayerService, MidenRelayerService, EVMRelayerService],
+  providers: [
+    RelayerService,
+    MidenRelayerService,
+    EVMRelayerService,
+    SVMRelayerService,
+  ],
 })
 export class RelayerModule {}

@@ -13,6 +13,7 @@ function parseNumberList(value: string): Array<bigint> {
 export class MainConfigService {
   private readonly evmChainIds: Array<bigint>;
   private readonly midenChainIds: Array<bigint>;
+  private readonly solanaChainIds: Array<bigint>;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER)
@@ -24,6 +25,9 @@ export class MainConfigService {
     );
     this.midenChainIds = parseNumberList(
       configService.getOrThrow('MIDEN_CHAIN_IDS'),
+    );
+    this.solanaChainIds = parseNumberList(
+      configService.getOrThrow('SOLANA_CHAIN_IDS'),
     );
   }
 
@@ -39,11 +43,19 @@ export class MainConfigService {
     return process.env[key];
   }
 
+  getSolanaChainConf<K extends `SOLANA_${string}`>(key: K): string {
+    return process.env[key];
+  }
+
   getEvmChainIds(): Array<bigint> {
     return this.evmChainIds;
   }
 
   getMidenChainIds(): Array<bigint> {
     return this.midenChainIds;
+  }
+
+  getSolanaChainIds(): Array<bigint> {
+    return this.solanaChainIds;
   }
 }

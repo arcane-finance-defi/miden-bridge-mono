@@ -1,0 +1,10 @@
+{
+  "idl": "onchain/solana/bridge-idl.json",
+  "before": [],
+  "scripts": {
+    "js": {
+      "from": "@codama/renderers-js",
+      "args": ["src/modules/relayer/generated/solana"]
+    }
+  }
+}

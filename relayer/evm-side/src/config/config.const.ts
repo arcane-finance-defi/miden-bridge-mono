@@ -1,7 +1,9 @@
 export const EVM_RPCS = 'EVM_RPCS';
 export const MIDEN_RPCS = 'MIDEN_RPCS';
+export const SOLANA_RPCS = 'SOLANA_RPCS';
 
 export const EVM_BRIDGE_ADDRESSES = 'EVM_BRIDGE_ADDRESSES';
+export const SOLANA_BRIDGE_ADDRESSES = 'SOLANA_BRIDGE_ADDRESSES';
 
 export function getEvmStartBlockScanEnvVarKey(
   chainId: bigint,
@@ -37,4 +39,23 @@ export function getMidenStartBlockScanEnvVarKey(
   chainId: bigint,
 ): `MIDEN_START_SCAN_BLOCK_${string}` {
   return `MIDEN_START_SCAN_BLOCK_${chainId.toString()}`;
+}
+
+export function getSolanaStartBlockScanEnvVarKey(
+  chainId: bigint,
+): `SOLANA_START_SCAN_BLOCK_${string}` {
+  return `SOLANA_START_SCAN_BLOCK_${chainId.toString()}`;
+}
+
+export function getSolanaBridgeAddressEnvVarKey(
+  chainId: bigint,
+): `SOLANA_BRIDGE_ADDRESS_${string}` {
+  return `SOLANA_BRIDGE_ADDRESS_${chainId.toString()}`;
+}
+
+export function getSolanaBridgeUserPrivateKeyEnvVarKey(
+  chainId: bigint,
+  bridgeAddress: string,
+): `SOLANA_BRIDGE_USER_PRIVATE_KEY_${string}` {
+  return `SOLANA_BRIDGE_USER_PRIVATE_KEY_${chainId.toString()}_${bridgeAddress.toUpperCase()}`;
 }

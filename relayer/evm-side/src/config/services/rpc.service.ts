@@ -1,6 +1,7 @@
 import { JsonRpcProvider, Provider } from 'ethers';
 import { ConfigService } from '@nestjs/config';
 import { MidenApiService } from './miden.service';
+import { createSolanaRpc, devnet, Rpc, SolanaRpcApi } from '@solana/kit';
 
 export class RpcConfigService {
   static async connectEvmChains(
@@ -24,6 +25,26 @@ export class RpcConfigService {
       }
 
       result.set(chainId, provider);
+    }
+
+    return result;
+  }
+
+  static async connectSolanaChains(
+    solanaChainIds: Array<bigint>,
+    config: ConfigService,
+  ): Promise<Map<bigint, Rpc<SolanaRpcApi>>> {
+    const result: Map<bigint, Rpc<SolanaRpcApi>> = new Map();
+    for (const chainId of solanaChainIds) {
+      const envKey = `SOLANA_RPC_CHAIN_${chainId}`;
+      const url: string = config.getOrThrow(envKey);
+      if (!URL.canParse(url)) {
+        throw new Error(`Malformed url in env var "${envKey}"`);
+      }
+
+      const rpc = createSolanaRpc(devnet(url));
+
+      result.set(chainId, rpc);
     }
 
     return result;

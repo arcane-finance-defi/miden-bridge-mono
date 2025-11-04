@@ -3,6 +3,7 @@ import Joi from '@hapi/joi';
 export interface IEnvConfig {
   MIDEN_CHAIN_IDS: string;
   EVM_CHAIN_IDS: string;
+  SOLANA_CHAIN_IDS: string;
 }
 
 export const EnvConfigSchema = Joi.object<IEnvConfig>({
@@ -10,6 +11,9 @@ export const EnvConfigSchema = Joi.object<IEnvConfig>({
     .regex(/\d+(,\d+)*/)
     .required(),
   EVM_CHAIN_IDS: Joi.string()
+    .regex(/\d+(,\d+)*/)
+    .required(),
+  SOLANA_CHAIN_IDS: Joi.string()
     .regex(/\d+(,\d+)*/)
     .required(),
 }).options({
