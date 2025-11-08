@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prebuild": "codama run js",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -24,6 +25,7 @@
     "@codama/nodes-from-anchor": "^1.2.9",
     "@codama/renderers-js": "^1.4.3",
     "@codama/renderers-rust": "^1.2.7",
+    "@debridge-finance/solana-transaction-parser": "^3.4.1",
     "@hapi/joi": "^17.1.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^4.0.1",

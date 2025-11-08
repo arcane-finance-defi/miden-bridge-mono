@@ -8,7 +8,16 @@
   "instructions": [
     {
       "name": "add_relayer",
-      "discriminator": [184, 240, 94, 199, 19, 71, 21, 192],
+      "discriminator": [
+        184,
+        240,
+        94,
+        199,
+        19,
+        71,
+        21,
+        192
+      ],
       "accounts": [
         {
           "name": "config",
@@ -18,7 +27,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -38,7 +59,16 @@
     },
     {
       "name": "initialize_bridge",
-      "discriminator": [6, 173, 152, 229, 35, 112, 127, 151],
+      "discriminator": [
+        6,
+        173,
+        152,
+        229,
+        35,
+        112,
+        127,
+        151
+      ],
       "accounts": [
         {
           "name": "config",
@@ -48,7 +78,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -66,7 +108,19 @@
               {
                 "kind": "const",
                 "value": [
-                  109, 105, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
                   121
                 ]
               }
@@ -75,20 +129,34 @@
         },
         {
           "name": "fee_vault",
-          "docs": ["Fee vault token account"],
+          "docs": [
+            "Fee vault token account"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [102, 101, 101, 95, 118, 97, 117, 108, 116]
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
               }
             ]
           }
         },
         {
           "name": "metadata_account",
-          "docs": ["Metadata account for the bridge token"],
+          "docs": [
+            "Metadata account for the bridge token"
+          ],
           "writable": true
         },
         {
@@ -148,7 +216,16 @@
     },
     {
       "name": "mint_tokens",
-      "discriminator": [59, 132, 24, 246, 122, 39, 8, 243],
+      "discriminator": [
+        59,
+        132,
+        24,
+        246,
+        122,
+        39,
+        8,
+        243
+      ],
       "accounts": [
         {
           "name": "config",
@@ -157,7 +234,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -174,7 +263,19 @@
               {
                 "kind": "const",
                 "value": [
-                  109, 105, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
                   121
                 ]
               }
@@ -203,7 +304,16 @@
     },
     {
       "name": "remove_relayer",
-      "discriminator": [154, 149, 161, 231, 69, 74, 136, 237],
+      "discriminator": [
+        154,
+        149,
+        161,
+        231,
+        69,
+        74,
+        136,
+        237
+      ],
       "accounts": [
         {
           "name": "config",
@@ -213,7 +323,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -233,7 +355,16 @@
     },
     {
       "name": "set_min_bridge_amount",
-      "discriminator": [12, 53, 126, 87, 89, 190, 214, 65],
+      "discriminator": [
+        12,
+        53,
+        126,
+        87,
+        89,
+        190,
+        214,
+        65
+      ],
       "accounts": [
         {
           "name": "config",
@@ -243,7 +374,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -263,7 +406,16 @@
     },
     {
       "name": "set_owner",
-      "discriminator": [72, 202, 120, 52, 77, 128, 96, 197],
+      "discriminator": [
+        72,
+        202,
+        120,
+        52,
+        77,
+        128,
+        96,
+        197
+      ],
       "accounts": [
         {
           "name": "config",
@@ -273,7 +425,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -293,7 +457,16 @@
     },
     {
       "name": "set_paused",
-      "discriminator": [91, 60, 125, 192, 176, 225, 166, 218],
+      "discriminator": [
+        91,
+        60,
+        125,
+        192,
+        176,
+        225,
+        166,
+        218
+      ],
       "accounts": [
         {
           "name": "config",
@@ -303,7 +476,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -323,7 +508,16 @@
     },
     {
       "name": "set_protocol_fee",
-      "discriminator": [173, 239, 83, 242, 136, 43, 144, 217],
+      "discriminator": [
+        173,
+        239,
+        83,
+        242,
+        136,
+        43,
+        144,
+        217
+      ],
       "accounts": [
         {
           "name": "config",
@@ -333,7 +527,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -353,7 +559,16 @@
     },
     {
       "name": "set_relayer_threshold",
-      "discriminator": [113, 127, 221, 127, 79, 32, 21, 54],
+      "discriminator": [
+        113,
+        127,
+        221,
+        127,
+        79,
+        32,
+        21,
+        54
+      ],
       "accounts": [
         {
           "name": "config",
@@ -363,7 +578,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -383,7 +610,16 @@
     },
     {
       "name": "submit_message",
-      "discriminator": [92, 12, 188, 194, 54, 235, 188, 92],
+      "discriminator": [
+        92,
+        12,
+        188,
+        194,
+        54,
+        235,
+        188,
+        92
+      ],
       "accounts": [
         {
           "name": "swap_message",
@@ -393,7 +629,18 @@
               {
                 "kind": "const",
                 "value": [
-                  115, 119, 97, 112, 95, 109, 101, 115, 115, 97, 103, 101
+                  115,
+                  119,
+                  97,
+                  112,
+                  95,
+                  109,
+                  101,
+                  115,
+                  115,
+                  97,
+                  103,
+                  101
                 ]
               },
               {
@@ -425,20 +672,35 @@
         {
           "name": "message_hash",
           "type": {
-            "array": ["u8", 32]
+            "array": [
+              "u8",
+              32
+            ]
           }
         },
         {
           "name": "original_sender",
           "type": {
-            "array": ["u8", 32]
+            "array": [
+              "u8",
+              32
+            ]
           }
         }
       ]
     },
     {
       "name": "submit_signature",
-      "discriminator": [205, 224, 80, 14, 239, 119, 52, 129],
+      "discriminator": [
+        205,
+        224,
+        80,
+        14,
+        239,
+        119,
+        52,
+        129
+      ],
       "accounts": [
         {
           "name": "config",
@@ -448,7 +710,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -460,7 +734,9 @@
         },
         {
           "name": "bridge_mint",
-          "docs": ["The mint to mint tokens"],
+          "docs": [
+            "The mint to mint tokens"
+          ],
           "writable": true
         },
         {
@@ -480,7 +756,19 @@
               {
                 "kind": "const",
                 "value": [
-                  109, 105, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
                   121
                 ]
               }
@@ -521,7 +809,16 @@
     },
     {
       "name": "swap_out_wrapped",
-      "discriminator": [151, 127, 62, 7, 192, 199, 223, 197],
+      "discriminator": [
+        151,
+        127,
+        62,
+        7,
+        192,
+        199,
+        223,
+        197
+      ],
       "accounts": [
         {
           "name": "config",
@@ -531,7 +828,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -547,20 +856,34 @@
         },
         {
           "name": "fee_vault",
-          "docs": ["Fee vault token account"],
+          "docs": [
+            "Fee vault token account"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [102, 101, 101, 95, 118, 97, 117, 108, 116]
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
               }
             ]
           }
         },
         {
           "name": "sender",
-          "docs": ["The sender"],
+          "docs": [
+            "The sender"
+          ],
           "writable": true,
           "signer": true
         },
@@ -571,7 +894,19 @@
               {
                 "kind": "const",
                 "value": [
-                  109, 105, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
                   121
                 ]
               }
@@ -599,18 +934,30 @@
         {
           "name": "to",
           "type": {
-            "array": ["u8", 32]
+            "array": [
+              "u8",
+              32
+            ]
           }
         },
         {
           "name": "dest_chain",
-          "type": "u16"
+          "type": "u32"
         }
       ]
     },
     {
       "name": "withdraw_fees",
-      "discriminator": [198, 212, 171, 109, 144, 215, 174, 89],
+      "discriminator": [
+        198,
+        212,
+        171,
+        109,
+        144,
+        215,
+        174,
+        89
+      ],
       "accounts": [
         {
           "name": "config",
@@ -620,7 +967,19 @@
               {
                 "kind": "const",
                 "value": [
-                  98, 114, 105, 100, 103, 101, 95, 99, 111, 110, 102, 105, 103
+                  98,
+                  114,
+                  105,
+                  100,
+                  103,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
                 ]
               }
             ]
@@ -631,27 +990,43 @@
         },
         {
           "name": "fee_vault",
-          "docs": ["Fee vault TokenAccount"],
+          "docs": [
+            "Fee vault TokenAccount"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [102, 101, 101, 95, 118, 97, 117, 108, 116]
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
               }
             ]
           }
         },
         {
           "name": "owner_token_account",
-          "docs": ["Owner's token account to receive fees"],
+          "docs": [
+            "Owner's token account to receive fees"
+          ],
           "writable": true
         },
         {
           "name": "owner",
           "writable": true,
           "signer": true,
-          "relations": ["config"]
+          "relations": [
+            "config"
+          ]
         },
         {
           "name": "mint_authority",
@@ -660,7 +1035,19 @@
               {
                 "kind": "const",
                 "value": [
-                  109, 105, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
                   121
                 ]
               }
@@ -689,57 +1076,174 @@
   "accounts": [
     {
       "name": "BridgeConfig",
-      "discriminator": [40, 206, 51, 233, 246, 40, 178, 85]
+      "discriminator": [
+        40,
+        206,
+        51,
+        233,
+        246,
+        40,
+        178,
+        85
+      ]
     },
     {
       "name": "SwapMessage",
-      "discriminator": [19, 133, 33, 123, 101, 12, 252, 94]
+      "discriminator": [
+        19,
+        133,
+        33,
+        123,
+        101,
+        12,
+        252,
+        94
+      ]
     }
   ],
   "events": [
     {
       "name": "AssetUpdatedEvent",
-      "discriminator": [168, 177, 196, 134, 110, 228, 10, 0]
+      "discriminator": [
+        168,
+        177,
+        196,
+        134,
+        110,
+        228,
+        10,
+        0
+      ]
     },
     {
       "name": "FeeUpdatedEvent",
-      "discriminator": [124, 0, 33, 112, 38, 152, 178, 195]
+      "discriminator": [
+        124,
+        0,
+        33,
+        112,
+        38,
+        152,
+        178,
+        195
+      ]
     },
     {
       "name": "FeesWithdrawnEvent",
-      "discriminator": [93, 177, 0, 69, 15, 156, 73, 194]
+      "discriminator": [
+        93,
+        177,
+        0,
+        69,
+        15,
+        156,
+        73,
+        194
+      ]
     },
     {
       "name": "InitializeEvent",
-      "discriminator": [206, 175, 169, 208, 241, 210, 35, 221]
+      "discriminator": [
+        206,
+        175,
+        169,
+        208,
+        241,
+        210,
+        35,
+        221
+      ]
     },
     {
       "name": "OwnerUpdatedEvent",
-      "discriminator": [46, 12, 90, 26, 5, 98, 185, 136]
+      "discriminator": [
+        46,
+        12,
+        90,
+        26,
+        5,
+        98,
+        185,
+        136
+      ]
     },
     {
       "name": "PausedEvent",
-      "discriminator": [43, 14, 250, 236, 116, 42, 177, 89]
+      "discriminator": [
+        43,
+        14,
+        250,
+        236,
+        116,
+        42,
+        177,
+        89
+      ]
     },
     {
       "name": "RelayerAddedEvent",
-      "discriminator": [141, 232, 84, 10, 197, 203, 217, 105]
+      "discriminator": [
+        141,
+        232,
+        84,
+        10,
+        197,
+        203,
+        217,
+        105
+      ]
     },
     {
       "name": "RelayerRemovedEvent",
-      "discriminator": [203, 13, 90, 198, 59, 47, 89, 245]
+      "discriminator": [
+        203,
+        13,
+        90,
+        198,
+        59,
+        47,
+        89,
+        245
+      ]
     },
     {
       "name": "SwapInEvent",
-      "discriminator": [146, 253, 181, 79, 103, 71, 195, 125]
+      "discriminator": [
+        146,
+        253,
+        181,
+        79,
+        103,
+        71,
+        195,
+        125
+      ]
     },
     {
       "name": "SwapOutEvent",
-      "discriminator": [21, 117, 255, 136, 215, 209, 131, 32]
+      "discriminator": [
+        21,
+        117,
+        255,
+        136,
+        215,
+        209,
+        131,
+        32
+      ]
     },
     {
       "name": "ThresholdUpdatedEvent",
-      "discriminator": [92, 37, 94, 1, 80, 168, 25, 222]
+      "discriminator": [
+        92,
+        37,
+        94,
+        1,
+        80,
+        168,
+        25,
+        222
+      ]
     }
   ],
   "errors": [
@@ -928,17 +1432,23 @@
         "fields": [
           {
             "name": "owner",
-            "docs": ["Owner of the bridge program"],
+            "docs": [
+              "Owner of the bridge program"
+            ],
             "type": "pubkey"
           },
           {
             "name": "bridge_mint",
-            "docs": ["Bridge mint"],
+            "docs": [
+              "Bridge mint"
+            ],
             "type": "pubkey"
           },
           {
             "name": "relayers",
-            "docs": ["List of trusted relayers"],
+            "docs": [
+              "List of trusted relayers"
+            ],
             "type": {
               "vec": "pubkey"
             }
@@ -952,17 +1462,23 @@
           },
           {
             "name": "paused",
-            "docs": ["Whether the bridge is paused"],
+            "docs": [
+              "Whether the bridge is paused"
+            ],
             "type": "bool"
           },
           {
             "name": "protocol_fee_bps",
-            "docs": ["Protocol fee in basis points (e.g., 50 = 0.5%)"],
+            "docs": [
+              "Protocol fee in basis points (e.g., 50 = 0.5%)"
+            ],
             "type": "u64"
           },
           {
             "name": "min_bridge_amount",
-            "docs": ["Minimum amount required for bridge operations"],
+            "docs": [
+              "Minimum amount required for bridge operations"
+            ],
             "type": "u64"
           },
           {
@@ -974,17 +1490,23 @@
           },
           {
             "name": "mint_authority_bump",
-            "docs": ["Mint authority bump"],
+            "docs": [
+              "Mint authority bump"
+            ],
             "type": "u8"
           },
           {
             "name": "bump",
-            "docs": ["PDA bump"],
+            "docs": [
+              "PDA bump"
+            ],
             "type": "u8"
           },
           {
             "name": "transaction_count",
-            "docs": ["Total transaction count for nonce generation"],
+            "docs": [
+              "Total transaction count for nonce generation"
+            ],
             "type": "u64"
           }
         ]
@@ -1102,7 +1624,10 @@
           {
             "name": "signature",
             "type": {
-              "array": ["u8", 64]
+              "array": [
+                "u8",
+                64
+              ]
             }
           }
         ]
@@ -1116,7 +1641,10 @@
           {
             "name": "tx_hash",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
@@ -1126,16 +1654,19 @@
           {
             "name": "to",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
             "name": "source_chain",
-            "type": "u16"
+            "type": "u32"
           },
           {
             "name": "dest_chain",
-            "type": "u16"
+            "type": "u32"
           }
         ]
       }
@@ -1166,7 +1697,10 @@
           {
             "name": "hash",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
@@ -1188,7 +1722,10 @@
           {
             "name": "tx_hash",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
@@ -1198,13 +1735,19 @@
           {
             "name": "from",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
             "name": "to",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
@@ -1213,11 +1756,11 @@
           },
           {
             "name": "source_chain",
-            "type": "u16"
+            "type": "u32"
           },
           {
             "name": "dest_chain",
-            "type": "u16"
+            "type": "u32"
           },
           {
             "name": "nonce",
@@ -1241,11 +1784,11 @@
           },
           {
             "name": "source_chain",
-            "type": "u16"
+            "type": "u32"
           },
           {
             "name": "dest_chain",
-            "type": "u16"
+            "type": "u32"
           },
           {
             "name": "nonce",

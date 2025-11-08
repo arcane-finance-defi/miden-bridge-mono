@@ -9,8 +9,9 @@ import {
   getEvmStartBlockScanEnvVarKey,
   MainConfigService,
 } from 'src/config';
-import { ChainRef, ExitModel } from 'src/models/exit.model';
+import { ExitModel } from 'src/models/exit.model';
 import BigNumber from 'bignumber.js';
+import { KindService } from 'src/modules/chains/kind/kind.service';
 
 @Injectable()
 export class PollerService {
@@ -19,15 +20,13 @@ export class PollerService {
   private readonly finalizationBlockGap: number;
   private readonly scanBatchSize: number;
 
-  private readonly midenChains: Array<bigint>;
-  private readonly evmChains: Array<bigint>;
-
   constructor(
     private readonly rpc: RpcService,
     private readonly chainId: bigint,
     config: MainConfigService,
     private readonly scans: ScansRepository,
     private readonly exits: ExitRepository,
+    private readonly kindService: KindService,
   ) {
     this.logger = new Logger(`EvmPollerService (${chainId})`);
     this.startScanBlock = Number.parseInt(
@@ -40,19 +39,9 @@ export class PollerService {
     this.scanBatchSize = Number.parseInt(
       config.getEvmChainConf(getEvmScanBatchSizeEnvVarKey(chainId)) || '100',
     );
-
-    this.evmChains = config.getEvmChainIds();
-    this.midenChains = config.getMidenChainIds();
   }
 
-  private getChainKind(chainId: bigint): ChainRef['chainKind'] {
-    if (this.midenChains.includes(chainId)) {
-      return 'miden';
-    }
-    return 'evm';
-  }
-
-  @Cron(CronExpression.EVERY_10_SECONDS, { waitForCompletion: true })
+  // @Cron(CronExpression.EVERY_10_SECONDS, { waitForCompletion: true })
   async poll() {
     const rpcHeight = await this.rpc.getChainHeight(this.chainId);
     const lastScannedHeight = await this.scans.getLastScannedBlockFor(
@@ -80,7 +69,9 @@ export class PollerService {
       assetAddress: message.metadata.assetOriginalAddr,
       assetOrigin: {
         chainId: message.metadata.assetOriginalNetwork,
-        chainKind: this.getChainKind(message.metadata.assetOriginalNetwork),
+        chainKind: this.kindService.getChainKind(
+          message.metadata.assetOriginalNetwork,
+        ),
       },
       assetAmount: new BigNumber(asset.amount.toString()),
       from: {
@@ -89,7 +80,7 @@ export class PollerService {
       },
       to: {
         chainId: asset.destinationNetwork,
-        chainKind: this.getChainKind(asset.destinationNetwork),
+        chainKind: this.kindService.getChainKind(asset.destinationNetwork),
       },
       sender: asset.originAddress,
       receiver: message.metadata.callAddress,

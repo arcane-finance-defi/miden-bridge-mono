@@ -59,3 +59,52 @@ export function getSolanaBridgeUserPrivateKeyEnvVarKey(
 ): `SOLANA_BRIDGE_USER_PRIVATE_KEY_${string}` {
   return `SOLANA_BRIDGE_USER_PRIVATE_KEY_${chainId.toString()}_${bridgeAddress.toUpperCase()}`;
 }
+
+export function getSolanaAssetOriginNetworkEnvVarKey(
+  chainId: bigint,
+  bridgeAddress: string,
+): `SOLANA_ASSET_ORIGIN_NETWORK_${string}` {
+  return `SOLANA_ASSET_ORIGIN_NETWORK_${chainId.toString()}_${bridgeAddress.toUpperCase()}`;
+}
+
+export function getSolanaAssetOriginAddressEnvVarKey(
+  chainId: bigint,
+  bridgeAddress: string,
+): `SOLANA_ASSET_ORIGIN_ADDRESS_${string}` {
+  return `SOLANA_ASSET_ORIGIN_ADDRESS_${chainId.toString()}_${bridgeAddress.toUpperCase()}`;
+}
+
+export function getSolanaAssetDestinationAddressEnvVarKey(
+  chainId: bigint,
+  bridgeAddress: string,
+): `SOLANA_ASSET_DESTINATION_ADDRESS_${string}` {
+  return `SOLANA_ASSET_DESTINATION_ADDRESS_${chainId.toString()}_${bridgeAddress.toUpperCase()}`;
+}
+
+export function getSolanaAssetDecimalsEnvVarKey(
+  chainId: bigint,
+  bridgeAddress: string,
+): `SOLANA_ASSET_DECIMALS_${string}` {
+  return `SOLANA_ASSET_DECIMALS_${chainId.toString()}_${bridgeAddress.toUpperCase()}`;
+}
+
+export function getSolanaAssetSymbolEnvVarKey(
+  chainId: bigint,
+  bridgeAddress: string,
+): `SOLANA_ASSET_SYMBOL_${string}` {
+  return `SOLANA_ASSET_SYMBOL_${chainId.toString()}_${bridgeAddress.toUpperCase()}`;
+}
+
+export function getSolanaAssetNameEnvVarKey(
+  chainId: bigint,
+  bridgeAddress: string,
+): `SOLANA_ASSET_NAME_${string}` {
+  return `SOLANA_ASSET_NAME_${chainId.toString()}_${bridgeAddress.toUpperCase()}`;
+}
+
+export function getSolanaBridgeFirstSignatureEnvVarKey(
+  chainId: bigint,
+  bridgeAddress: string,
+): `SOLANA_BRIDGE_FIRST_SIGNATURE_${string}` {
+  return `SOLANA_BRIDGE_FIRST_SIGNATURE_${chainId.toString()}_${bridgeAddress.toUpperCase()}`;
+}

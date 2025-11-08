@@ -13,6 +13,8 @@ import { RepositoriesModule } from 'src/repositories/repositories.module';
 import { ExitRepository } from 'src/repositories/services/exit.repository';
 import { ScansRepository } from 'src/repositories/services/scans.repository';
 import { MidenModule } from '../miden';
+import { KindService } from '../chains/kind/kind.service';
+import { ChainsModule } from '../chains/chains.module';
 
 function generateKey(chainId): string {
   return `evm-poller-${chainId}`;
@@ -21,26 +23,38 @@ function generateKey(chainId): string {
 function generateProvider(chainId): FactoryProvider<PollerService> {
   return {
     provide: generateKey(chainId),
-    useFactory(config, rpc, scans, exits) {
-      return new PollerService(rpc, chainId, config, scans, exits);
+    useFactory(config, rpc, scans, exits, kindService) {
+      return new PollerService(rpc, chainId, config, scans, exits, kindService);
     },
-    inject: [MainConfigService, RpcService, ScansRepository, ExitRepository],
+    inject: [
+      MainConfigService,
+      RpcService,
+      ScansRepository,
+      ExitRepository,
+      KindService,
+    ],
   };
 }
 
 function generateAsyncProvider(index): FactoryProvider<PollerService> {
   return {
     provide: generateKey(index),
-    useFactory(config: MainConfigService, rpc, scans, exits) {
+    useFactory(config: MainConfigService, rpc, scans, exits, kindService) {
       const chainId = config.getEvmChainIds()[index];
-      return new PollerService(rpc, chainId, config, scans, exits);
+      return new PollerService(rpc, chainId, config, scans, exits, kindService);
     },
-    inject: [MainConfigService, RpcService, ScansRepository, ExitRepository],
+    inject: [
+      MainConfigService,
+      RpcService,
+      ScansRepository,
+      ExitRepository,
+      KindService,
+    ],
   };
 }
 
 @Module({
-  imports: [MainConfigModule, RepositoriesModule, MidenModule],
+  imports: [MainConfigModule, RepositoriesModule, MidenModule, ChainsModule],
   providers: [RpcService],
 })
 export class EvmModule extends ConfigurableModuleClass {

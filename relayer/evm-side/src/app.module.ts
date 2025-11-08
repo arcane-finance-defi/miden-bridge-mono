@@ -10,6 +10,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RepositoriesModule } from './repositories/repositories.module';
 import { MidenModule } from './modules/miden';
 import { RelayerModule } from './modules/relayer/relayer.module';
+import { SolanaModule } from './modules/solana/solana.module';
+import { ChainsModule } from './modules/chains/chains.module';
 
 @Module({
   imports: [
@@ -52,10 +54,21 @@ import { RelayerModule } from './modules/relayer/relayer.module';
         };
       },
     }),
+    SolanaModule.registerAsync({
+      imports: [MainConfigModule],
+      inject: [MainConfigService],
+      useFactory(config: MainConfigService) {
+        return {
+          chainIds: config.getSolanaChainIds(),
+        };
+      },
+    }),
     RelayerModule,
     ScheduleModule.forRoot(),
     RepositoriesModule,
     RelayerModule,
+    SolanaModule,
+    ChainsModule,
   ],
 })
 export class AppModule {}

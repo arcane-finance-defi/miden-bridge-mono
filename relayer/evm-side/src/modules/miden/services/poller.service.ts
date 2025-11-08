@@ -6,15 +6,12 @@ import {
   MainConfigService,
   MidenApiService,
 } from 'src/config';
-import { ChainRef } from 'src/models/exit.model';
+import { KindService } from 'src/modules/chains/kind/kind.service';
 import { ExitRepository, ScansRepository } from 'src/repositories';
 
 export class PollerService {
   private readonly logger;
   private readonly startScanBlock: number;
-
-  private readonly midenChains: Array<bigint>;
-  private readonly evmChains: Array<bigint>;
 
   constructor(
     private readonly chainId: bigint,
@@ -22,24 +19,15 @@ export class PollerService {
     private readonly exits: ExitRepository,
     private readonly scans: ScansRepository,
     config: MainConfigService,
+    private readonly kindService: KindService,
   ) {
     this.logger = new Logger(`MidenPollerService (${chainId})`);
     this.startScanBlock = Number.parseInt(
       config.getMidenChainConf(getMidenStartBlockScanEnvVarKey(chainId)) || '0',
     );
-
-    this.evmChains = config.getEvmChainIds();
-    this.midenChains = config.getMidenChainIds();
   }
 
-  private getChainKind(chainId: bigint): ChainRef['chainKind'] {
-    if (this.midenChains.includes(chainId)) {
-      return 'miden';
-    }
-    return 'evm';
-  }
-
-  @Cron(CronExpression.EVERY_10_SECONDS, { waitForCompletion: true })
+  // @Cron(CronExpression.EVERY_10_SECONDS, { waitForCompletion: true })
   async poll() {
     const lastScannedHeight = await this.scans.getLastScannedBlockFor(
       this.chainId,
@@ -60,12 +48,16 @@ export class PollerService {
             },
             to: {
               chainId: BigInt(exit.destinationChain),
-              chainKind: this.getChainKind(BigInt(exit.destinationChain)),
+              chainKind: this.kindService.getChainKind(
+                BigInt(exit.destinationChain),
+              ),
             },
             assetAddress: exit.asset.originAddress,
             assetOrigin: {
               chainId: BigInt(exit.asset.originNetwork),
-              chainKind: this.getChainKind(BigInt(exit.asset.originNetwork)),
+              chainKind: this.kindService.getChainKind(
+                BigInt(exit.asset.originNetwork),
+              ),
             },
             assetAmount: BigNumber(exit.amount),
             assetDecimals: exit.asset.decimals,
