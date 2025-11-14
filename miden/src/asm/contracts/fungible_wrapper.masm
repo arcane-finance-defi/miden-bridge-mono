@@ -46,7 +46,7 @@ const.INPUTS_INDEX_LOC=1
 #!
 #! Invocation: call
 export.bridge.2
-    mem_storew.SERIAL_NUM_SLOT dropw
+    mem_storew_be.SERIAL_NUM_SLOT dropw
 
     # burning the asset
     exec.faucet::burn
@@ -64,7 +64,7 @@ export.bridge.2
     loc_load.INPUTS_INDEX_LOC loc_load.INPUTS_NUM_WORDS_LOC lt
     while.true
         loc_load.INPUTS_INDEX_LOC mul.4 add.INPUTS_SLOT
-        mem_storew dropw
+        mem_storew_be dropw
         loc_load.INPUTS_INDEX_LOC add.1 loc_store.INPUTS_INDEX_LOC
         loc_load.INPUTS_INDEX_LOC loc_load.INPUTS_NUM_WORDS_LOC lt
     end
@@ -72,7 +72,7 @@ export.bridge.2
     # Pad to 8 elements
     loc_load.INPUTS_NUM_WORDS_LOC u32mod.2
     if.true
-        padw loc_load.INPUTS_NUM_WORDS_LOC mul.4 add.INPUTS_SLOT mem_storew
+        padw loc_load.INPUTS_NUM_WORDS_LOC mul.4 add.INPUTS_SLOT mem_storew_be
         dropw
         loc_load.INPUTS_NUM_WORDS_LOC add.1 loc_store.INPUTS_NUM_WORDS_LOC
     end
@@ -84,7 +84,7 @@ export.bridge.2
     push.BRIDGE_NOTE_CODE_COMMITMENT_FELT1.BRIDGE_NOTE_CODE_COMMITMENT_FELT2.BRIDGE_NOTE_CODE_COMMITMENT_FELT3.BRIDGE_NOTE_CODE_COMMITMENT_FELT4
     # => [SCRIPT_COMMITMENT, INPUTS_COMMITMENT]
 
-    padw mem_loadw.SERIAL_NUM_SLOT
+    padw mem_loadw_be.SERIAL_NUM_SLOT
     # => [SERIAL_NUM, SCRIPT_ROOT, INPUTS_COMMITMENT]
 
     exec.tx::build_recipient_hash
