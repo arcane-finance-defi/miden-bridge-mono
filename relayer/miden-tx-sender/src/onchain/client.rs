@@ -27,8 +27,6 @@ use tokio::sync::oneshot::Sender as OneshotSender;
 
 pub struct OnchainClient {
     pub rpc: Arc<dyn NodeRpcClient + Send + Sync + 'static>,
-    endpoint: Endpoint,
-    timeout_ms: u64,
 }
 
 impl OnchainClient {
@@ -36,8 +34,6 @@ impl OnchainClient {
         let endpoint = Endpoint::try_from(rpc_endpoint.as_str()).unwrap();
         OnchainClient {
             rpc: Arc::new(GrpcClient::new(&endpoint, timeout_ms.clone())),
-            endpoint,
-            timeout_ms,
         }
     }
 
@@ -149,7 +145,7 @@ async fn mint_note(
     let mint_result = mint_asset(execution_client, faucet_id, recipient, amount).await?;
     let note_id = mint_result.created_notes().get_note(0).id();
 
-    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
+    let _timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
 
     println!("Minting took {}", now.elapsed().as_millis());
 
