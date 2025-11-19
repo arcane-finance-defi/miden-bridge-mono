@@ -24,20 +24,20 @@ thiserror = "2.0.12"
 anyhow = "1.0.98"
 
 [dev-dependencies]
-miden-lib = { version = "0.12.2", default-features = false }
-miden-objects = { version = "0.12.2", features = ["testing"], default-features = false }
-miden-tx = { version = "0.12.2", features = ["testing"], default-features = false }
-miden-testing = { version = "0.12.2", features = ["std"] }
-vm-processor = { package = "miden-processor", version = "0.19.1", default-features = false }
+miden-lib = { version = "0.12", default-features = false }
+miden-objects = { version = "0.12", features = ["testing"], default-features = false }
+miden-tx = { version = "0.12", features = ["testing"], default-features = false }
+miden-testing = { version = "0.12", features = ["std"] }
+vm-processor = { package = "miden-processor", version = "0.19", default-features = false }
 
 
 [build-dependencies]
 regex = { version = "1.10" }
 walkdir = { version = "2.5" }
-miden-assembly = { version = "0.19.1", default-features = false }
-miden-stdlib = { version = "0.19.1", default-features = false }
-miden-lib = { version = "0.12.2", default-features = false }
-miden-objects = { version = "0.12.2", default-features = false }
+miden-assembly = { version = "0.19", default-features = false }
+miden-stdlib = { version = "0.19", default-features = false }
+miden-lib = { version = "0.12", default-features = false }
+miden-objects = { version = "0.12", default-features = false }
 
 [profile.test-release]
 inherits = "release"

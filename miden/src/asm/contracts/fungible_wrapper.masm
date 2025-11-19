@@ -2,6 +2,7 @@ use.miden::account
 use.miden::faucet
 use.miden::tx
 use.miden::note
+use.miden::output_note
 use.std::sys
 
 #CONSTANTS
@@ -87,13 +88,13 @@ export.bridge.2
     padw mem_loadw_be.SERIAL_NUM_SLOT
     # => [SERIAL_NUM, SCRIPT_ROOT, INPUTS_COMMITMENT]
 
-    exec.tx::build_recipient_hash
+    exec.note::build_recipient_hash
     # => [RECIPIENT]
 
     push.1.1.0.BRIDGE_EVENT_TAG
     # => [tag, aux, note_type, execution_hint, RECIPIENT]
 
-    exec.tx::create_note
+    exec.output_note::create
     # => [note_idx, pad(15)]
 
     exec.sys::truncate_stack
