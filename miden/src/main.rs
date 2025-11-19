@@ -12,7 +12,7 @@ use miden_objects::{
     note::{
         Note, NoteAssets, NoteDetails, NoteExecutionHint, NoteFile, NoteMetadata, NoteTag, NoteType,
     },
-    utils::{parse_hex_string_as_word, Serializable},
+    utils::Serializable,
     AccountIdError, AssetError, Felt, FieldElement, NoteError, Word,
 };
 use thiserror::Error;
@@ -56,9 +56,8 @@ pub fn main() -> Result<(), CliError> {
 }
 
 fn build_recipient(receiver: String) -> Result<(), CliError> {
-    let mut rng = RpoRandomCoin::new(Word::new(
-        [Felt::new(1), Felt::new(2), Felt::new(3), Felt::new(4)]
-    ));
+    let mut rng =
+        RpoRandomCoin::new(Word::new([Felt::new(1), Felt::new(2), Felt::new(3), Felt::new(4)]));
 
     let serial_number: Word = rng.draw_word();
     let receiver =
@@ -83,13 +82,13 @@ fn restore_note(
     bridged_amount: String,
     faucet_id: String,
 ) -> Result<(), CliError> {
-    let serial_number = parse_hex_string_as_word(&serial_num_hex)
-        .map_err(|e| CliError::BytesHexDecodingError(e.parse().unwrap()))?;
+    let serial_number = Word::try_from(&serial_num_hex)
+        .map_err(|e| CliError::BytesHexDecodingError(e.to_string()))?;
 
     let receiver =
         AccountId::from_hex(&receiver.as_str()).map_err(|e| CliError::ParseAccountIdError(e))?;
 
-    let recipient = build_p2id_recipient(receiver, Word::new(serial_number.clone()))
+    let recipient = build_p2id_recipient(receiver, serial_number)
         .map_err(|e| CliError::BuildNoteRecipientError(e))?;
 
     let faucet_id =

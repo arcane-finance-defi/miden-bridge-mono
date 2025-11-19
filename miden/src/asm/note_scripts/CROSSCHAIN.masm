@@ -1,5 +1,5 @@
 use.miden::account
-use.miden::note
+use.miden::active_note
 use.miden::tx
 use.bridge::fungible_wrapper
 use.std::sys
@@ -44,7 +44,7 @@ const.INPUTS_PTR=16
 #!   - call_addr_felt3
 #! Outputs: []
 begin
-    push.INPUTS_PTR exec.note::get_inputs
+    push.INPUTS_PTR exec.active_note::get_inputs
     # => [num_inputs, inputs_ptr]
 
     dup u32divmod.4 neq.0 add dup mem_store.INPUTS_NUM_PTR sub.1 mem_store.INPUTS_INDEX_PTR
@@ -52,7 +52,7 @@ begin
     gte.13 assert.err=ERR_CROSSCHAIN_WRONG_NUMBER_OF_INPUTS
     drop
 
-    push.ASSETS_PTR exec.note::get_assets
+    push.ASSETS_PTR exec.active_note::get_assets
     # => [num_of_assets, ASSETS_PTR, ...]
 
     eq.1 assert.err=ERR_CROSSCHAIN_WRONG_NUMBER_OF_ASSETS
@@ -60,7 +60,7 @@ begin
 
     mem_load.INPUTS_INDEX_PTR gt.0
     while.true
-        padw mem_load.INPUTS_INDEX_PTR mul.4 add.INPUTS_PTR mem_loadw
+        padw mem_load.INPUTS_INDEX_PTR mul.4 add.INPUTS_PTR mem_loadw_be
         mem_load.INPUTS_INDEX_PTR sub.1 mem_store.INPUTS_INDEX_PTR
         mem_load.INPUTS_INDEX_PTR gt.0
     end
@@ -76,8 +76,8 @@ begin
         drop
     end
 
-    padw mem_loadw.ASSETS_PTR
-    padw push.INPUTS_PTR mem_loadw
+    padw mem_loadw_be.ASSETS_PTR
+    padw push.INPUTS_PTR mem_loadw_be
 
     call.fungible_wrapper::bridge
     exec.sys::truncate_stack
