@@ -1,11 +1,12 @@
-use miden_bridge::notes::BRIDGE_USECASE;
+use crate::onchain::asset::Asset;
 use crate::onchain::client::execute_tx;
 use crate::onchain::errors::OnchainError;
+use miden_bridge::notes::BRIDGE_USECASE;
 use miden_client::Client;
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::transaction::{TransactionRequestBuilder, TransactionResult};
-use miden_objects::Word;
 use miden_objects::Felt;
+use miden_objects::Word;
 use miden_objects::account::AccountId;
 use miden_objects::asset::{Asset as MidenAsset, FungibleAsset};
 use miden_objects::note::{
@@ -14,8 +15,6 @@ use miden_objects::note::{
 use miden_objects::transaction::OutputNote;
 use rand::rngs::StdRng;
 use serde::{Deserialize, Serialize};
-use crate::onchain::asset::Asset;
-
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(crate = "rocket::serde", rename_all = "camelCase")]
@@ -39,8 +38,9 @@ pub async fn mint_asset(
     recipient: Word,
     amount: u64,
 ) -> Result<TransactionResult, OnchainError> {
-    let asset =
-        MidenAsset::Fungible(FungibleAsset::new(faucet_id, amount).map_err(OnchainError::AssetError)?);
+    let asset = MidenAsset::Fungible(
+        FungibleAsset::new(faucet_id, amount).map_err(OnchainError::AssetError)?,
+    );
 
     let assets = NoteAssets::new(vec![asset]).map_err(OnchainError::NoteError)?;
 

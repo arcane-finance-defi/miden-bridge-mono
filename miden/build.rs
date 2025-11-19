@@ -1,3 +1,5 @@
+#![allow(clippy::get_first)]
+
 use std::{
     collections::BTreeMap,
     env,
@@ -306,7 +308,7 @@ fn is_masm_file(path: &Path) -> io::Result<bool> {
     if let Some(extension) = path.extension() {
         let extension = extension
             .to_str()
-            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "invalid UTF-8 filename"))?
+            .ok_or_else(|| io::Error::other("invalid UTF-8 filename"))?
             .to_lowercase();
         Ok(extension == "masm")
     } else {

@@ -6,42 +6,21 @@ mod onchain;
 mod store;
 mod utils;
 
-use std::error::Error;
 use rocket::State as RocketState;
+use std::error::Error;
 use std::sync::Arc;
 
 use crate::config::Config;
-use crate::onchain::client::{client_process_loop, ClientCommand};
-use crate::onchain::mint_note::{mint_asset, MintArgs, MintedNote};
 use crate::onchain::OnchainClient;
-use dotenv::dotenv;
-use miden_bridge::accounts::token_wrapper::TokenWrapperAccount;
-use miden_client::account::component::{BasicFungibleFaucet, BasicWallet, AuthRpoFalcon512};
-use miden_client::keystore::FilesystemKeyStore;
-use miden_client::note::get_input_note_with_id_prefix;
-use miden_client::rpc::NodeRpcClient;
-use miden_client::store::sqlite_store::SqliteStore;
-use miden_client::store::{NoteExportType, NoteFilter};
-use miden_client::transaction::{TransactionRequest, TransactionRequestBuilder};
-use miden_client::utils::Deserializable;
-use miden_client::{Client, ClientError, Felt};
-use miden_crypto::dsa::rpo_falcon512::SecretKey;
-use miden_crypto::rand::RpoRandomCoin;
-use miden_objects::{Word, account::{
-    Account, AccountBuilder, AccountId, AccountStorageMode, AccountType, AuthSecretKey,
-}};
-use miden_objects::asset::{FungibleAsset, TokenSymbol};
-use miden_objects::block::BlockNumber;
-use miden_objects::note::{Note, NoteFile, NoteType};
-use miden_objects::utils::{ReadAdapter, parse_hex_string_as_word};
-use rand::rngs::{StdRng, ThreadRng};
-use rand::{rng, Rng, RngCore};
-use rocket::http::Status;
-use rocket::serde::{json::Json, Deserialize, Serialize};
-use tokio::runtime::Runtime;
-use tokio::sync::mpsc::{Receiver, Sender};
-use log::warn;
+use crate::onchain::client::{ClientCommand, client_process_loop};
+use crate::onchain::mint_note::{MintArgs, MintedNote};
 use crate::onchain::poll_events::PolledEvents;
+use dotenv::dotenv;
+use log::warn;
+use miden_objects::Word;
+use rocket::http::Status;
+use rocket::serde::{Deserialize, Serialize, json::Json};
+use tokio::sync::mpsc::Sender;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -54,8 +33,8 @@ async fn mint_note(
     mint_args: Json<MintArgs>,
     state: &RocketState<State>,
 ) -> Result<Json<MintedNote>, (Status, Json<ErrorResponse>)> {
-    let recipient = Word::from(parse_hex_string_as_word(&mint_args.recipient)
-        .map_err(|e| (Status::BadRequest, Json(ErrorResponse { error: e.to_string() })))?);
+    let recipient = Word::parse(&mint_args.recipient)
+        .map_err(|e| (Status::BadRequest, Json(ErrorResponse { error: e.to_string() })))?;
     let (tx, rx) = tokio::sync::oneshot::channel();
 
     let command = ClientCommand::MintNote {
@@ -96,7 +75,10 @@ async fn chain_tip(state: &RocketState<State>) -> Result<String, Status> {
 #[get("/poll?<from>")]
 async fn poll(from: u32, state: &RocketState<State>) -> Result<Json<PolledEvents>, Status> {
     let (tx, rx) = tokio::sync::oneshot::channel();
-    state.sender.try_send(ClientCommand::PollEvents{ tx, from_block: from }).unwrap();
+    state
+        .sender
+        .try_send(ClientCommand::PollEvents { tx, from_block: from })
+        .unwrap();
 
     match rx.await {
         Ok(Ok(response)) => Ok(Json(response)),

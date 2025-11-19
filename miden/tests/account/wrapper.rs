@@ -1,12 +1,16 @@
 use miden_bridge::{
     accounts::{testing::create_token_wrapper_account_builder, token_wrapper::bridge_note_tag},
+    errors::note_errors::ERR_CROSSCHAIN_TOO_EARLY_EXECUTION,
     notes::bridge::{bridge, croschain},
 };
 use miden_lib::{
-    account::{auth::{AuthRpoFalcon512Acl, AuthRpoFalcon512AclConfig}, faucets::BasicFungibleFaucet},
+    account::{
+        auth::{AuthRpoFalcon512Acl, AuthRpoFalcon512AclConfig},
+        faucets::BasicFungibleFaucet,
+    },
     transaction::TransactionKernel,
+    utils::ScriptBuilder,
 };
-use miden_lib::utils::ScriptBuilder;
 use miden_objects::{
     account::{AccountId, AccountStorageMode, AuthSecretKey},
     asset::{FungibleAsset, TokenSymbol},
@@ -23,7 +27,7 @@ use miden_objects::{
     Felt, FieldElement, Word,
 };
 use miden_testing::{AccountState, Auth, MockChain};
-use miden_bridge::errors::note_errors::ERR_CROSSCHAIN_TOO_EARLY_EXECUTION;
+
 use crate::assert_transaction_executor_error;
 
 pub fn get_new_pk_and_authenticator(seed: [Felt; 4]) -> (PublicKey, AuthSecretKey) {
@@ -56,9 +60,8 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         .clone()
         .with_auth_component(AuthRpoFalcon512Acl::new(
             pub_key,
-            AuthRpoFalcon512AclConfig::new().with_auth_trigger_procedures(
-                vec![BasicFungibleFaucet::distribute_digest()]
-            ),
+            AuthRpoFalcon512AclConfig::new()
+                .with_auth_trigger_procedures(vec![BasicFungibleFaucet::distribute_digest()]),
         )?)
         .build()?;
 
@@ -66,7 +69,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         Auth::Acl {
             auth_trigger_procedures: vec![BasicFungibleFaucet::distribute_digest()],
             allow_unauthorized_input_notes: true,
-            allow_unauthorized_output_notes: true
+            allow_unauthorized_output_notes: true,
         },
         wrapper_builder.clone(),
         AccountState::Exists,
@@ -158,18 +161,15 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         amount = 10000
     );
 
-    let mint_tx_script =
-        ScriptBuilder::default().compile_tx_script(mint_tx_script_code)?;
+    let mint_tx_script = ScriptBuilder::default().compile_tx_script(mint_tx_script_code)?;
 
-    let executed_mint_transaction = mock_chain.build_tx_context(
-            wrapper.clone(),
-            &[],
-            &[]
-        )?
-            .tx_script(mint_tx_script)
-            .tx_inputs(mint_tx_inputs)
-            .build()?
-            .execute_blocking().expect("Unable to execute mint tx");
+    let executed_mint_transaction = mock_chain
+        .build_tx_context(wrapper.clone(), &[], &[])?
+        .tx_script(mint_tx_script)
+        .tx_inputs(mint_tx_inputs)
+        .build()?
+        .execute_blocking()
+        .expect("Unable to execute mint tx");
 
     mock_chain.add_pending_executed_transaction(&executed_mint_transaction.clone())?;
     mock_chain.prove_next_block()?;
@@ -215,43 +215,32 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
     let tx_inputs =
         mock_chain.get_transaction_inputs(wrapper.clone(), None, &[note.clone().id()], &[])?;
 
-
-    let failed_executed_transaction = mock_chain.build_tx_context(
-            wrapper.clone(),
-            &[],
-            &[]
-        )?
-            .tx_inputs(tx_inputs)
-            .extend_expected_output_notes(vec![OutputNote::Full(expected_note.clone())])
-            .build()?
-            .execute_blocking();
+    let failed_executed_transaction = mock_chain
+        .build_tx_context(wrapper.clone(), &[], &[])?
+        .tx_inputs(tx_inputs)
+        .extend_expected_output_notes(vec![OutputNote::Full(expected_note.clone())])
+        .build()?
+        .execute_blocking();
 
     assert_transaction_executor_error!(
         failed_executed_transaction,
         ERR_CROSSCHAIN_TOO_EARLY_EXECUTION
     );
 
-    mock_chain.prove_next_block_at(unlock_timestamp + DAY)
+    mock_chain
+        .prove_next_block_at(unlock_timestamp + DAY)
         .expect("Unable to generate next block");
 
+    let tx_inputs =
+        mock_chain.get_transaction_inputs(wrapper.clone(), None, &[note.clone().id()], &[])?;
 
-    let tx_inputs = mock_chain.
-        get_transaction_inputs(
-            wrapper.clone(),
-            None,
-            &[note.clone().id()],
-            &[]
-        )?;
-
-    let executed_transaction = mock_chain.build_tx_context(
-        wrapper.clone(),
-        &[],
-        &[]
-    )?
+    let executed_transaction = mock_chain
+        .build_tx_context(wrapper.clone(), &[], &[])?
         .tx_inputs(tx_inputs.clone())
         .extend_expected_output_notes(vec![OutputNote::Full(expected_note.clone())])
         .build()?
-        .execute_blocking().expect("Unable to execute crosschain consume transaction");
+        .execute_blocking()
+        .expect("Unable to execute crosschain consume transaction");
 
     assert_eq!(executed_transaction.output_notes().num_notes(), 1);
     assert_eq!(
