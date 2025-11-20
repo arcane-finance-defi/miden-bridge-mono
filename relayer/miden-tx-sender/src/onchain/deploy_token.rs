@@ -1,14 +1,15 @@
 use miden_bridge::accounts::token_wrapper::TokenWrapperAccount;
-use miden_client::account::component::{BasicFungibleFaucet};
+use miden_client::account::component::BasicFungibleFaucet;
 use miden_client::account::{AccountBuilder, AccountStorageMode, AccountType};
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::{Client, ClientError};
 use miden_lib::account::auth::{AuthRpoFalcon512Acl, AuthRpoFalcon512AclConfig};
-use miden_objects::account::{Account, AuthSecretKey};
+use miden_objects::account::Account;
+use miden_objects::account::auth::AuthSecretKey;
 use miden_objects::asset::{FungibleAsset, TokenSymbol};
-use miden_objects::{Felt, Word, crypto::dsa::rpo_falcon512::SecretKey};
+use miden_objects::{Felt, crypto::dsa::rpo_falcon512::SecretKey};
 use rand::prelude::StdRng;
-use rand::{rng, RngCore};
+use rand::{RngCore, rng};
 
 const MAX_SUPPLY: Felt = Felt::new(FungibleAsset::MAX_AMOUNT);
 
@@ -20,7 +21,7 @@ pub async fn insert_new_fungible_faucet(
     decimals: u8,
     origin_network: u64,
     origin_address: [Felt; 3],
-) -> Result<(Account, Word), ClientError> {
+) -> Result<Account, ClientError> {
     let mut rng = rng();
 
     let key_pair = SecretKey::with_rng(&mut rng);
@@ -33,19 +34,18 @@ pub async fn insert_new_fungible_faucet(
 
     let symbol = TokenSymbol::new(symbol).unwrap();
 
-    let (account, seed) = AccountBuilder::new(init_seed)
+    let account = AccountBuilder::new(init_seed)
         .account_type(AccountType::FungibleFaucet)
         .storage_mode(storage_mode)
         .with_auth_component(AuthRpoFalcon512Acl::new(
-            pub_key,
-            AuthRpoFalcon512AclConfig::new().with_auth_trigger_procedures(
-                vec![BasicFungibleFaucet::distribute_digest()])
-            )?
-        )
+            pub_key.into(),
+            AuthRpoFalcon512AclConfig::new()
+                .with_auth_trigger_procedures(vec![BasicFungibleFaucet::distribute_digest()]),
+        )?)
         .with_component(TokenWrapperAccount::new(origin_network, origin_address))
         .with_component(BasicFungibleFaucet::new(symbol, decimals, MAX_SUPPLY).unwrap())
         .build()?;
 
-    client.add_account(&account, Some(seed), false).await?;
-    Ok((account, seed))
+    client.add_account(&account, false).await?;
+    Ok(account)
 }

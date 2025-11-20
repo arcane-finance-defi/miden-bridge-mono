@@ -1,17 +1,12 @@
 [package]
 name = "miden-tx-sender"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2024"
-rust-version = "1.87.0"
+rust-version = "1.89.0"
 
 [dependencies]
 async-sqlite = "0.5.2"
 dotenv = "0.15.0"
-miden-bridge = { path = "../../miden" }
-miden-client = { version = "0.11.11", features = ["sqlite", "tonic"] }
-miden-crypto = "0.17.1"
-miden-objects = "0.11.5"
-miden-lib = "0.11.5"
 rand = "0.9"
 rocket = { version = "0.5.1", features = ["json"] }
 rusqlite = { version = "^0.36", features = ["bundled"] }
@@ -19,3 +14,10 @@ serde = { version = "1.0.219", features = ["derive"] }
 thiserror = "2.0.12"
 tokio = "1.44.1"
 log = "0.4.27"
+
+miden-bridge = { path = "../../miden" }
+miden-client = { version = "0.12", features = ["tonic"] }
+miden-client-sqlite-store = { version = "0.12" }
+miden-crypto = "0.18"
+miden-objects = "0.12"
+miden-lib = "0.12"

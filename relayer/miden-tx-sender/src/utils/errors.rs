@@ -1,5 +1,5 @@
-use std::num::TryFromIntError;
 use miden_objects::{AssetError, TokenSymbolError};
+use std::num::TryFromIntError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

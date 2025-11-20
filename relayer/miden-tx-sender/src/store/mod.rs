@@ -1,4 +1,4 @@
-use async_sqlite::{Pool, JournalMode, PoolBuilder};
+use async_sqlite::{JournalMode, Pool, PoolBuilder};
 use miden_client::store::StoreError;
 use miden_client::utils::{Deserializable, Serializable};
 use miden_objects::account::AccountId;

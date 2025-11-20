@@ -1,3 +1,5 @@
+#![allow(clippy::get_first)]
+
 use std::{
     collections::BTreeMap,
     env,
@@ -10,10 +12,15 @@ use std::{
 
 use miden_assembly::Report;
 use miden_lib::transaction::TransactionKernel;
-use miden_objects::{assembly::{
-    diagnostics::{IntoDiagnostic, Result},
-    Assembler, DefaultSourceManager, Library, LibraryPath, Module, ModuleKind,
-}, note::{NoteScript, NoteTag}, utils::Serializable, Word};
+use miden_objects::{
+    assembly::{
+        diagnostics::{IntoDiagnostic, Result},
+        Assembler, DefaultSourceManager, Library, LibraryPath, Module, ModuleKind,
+    },
+    note::{NoteScript, NoteTag},
+    utils::Serializable,
+    Word,
+};
 use regex::Regex;
 use walkdir::WalkDir;
 
@@ -121,7 +128,6 @@ fn compile_event_note_scripts(
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
     }
-
     let assembler = create_assembler()?;
 
     let mut result = BTreeMap::new();
@@ -302,7 +308,7 @@ fn is_masm_file(path: &Path) -> io::Result<bool> {
     if let Some(extension) = path.extension() {
         let extension = extension
             .to_str()
-            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "invalid UTF-8 filename"))?
+            .ok_or_else(|| io::Error::other("invalid UTF-8 filename"))?
             .to_lowercase();
         Ok(extension == "masm")
     } else {

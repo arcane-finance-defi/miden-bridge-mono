@@ -1,5 +1,8 @@
 use miden_lib::{
-    account::{auth::{AuthRpoFalcon512Acl, AuthRpoFalcon512AclConfig}, faucets::BasicFungibleFaucet},
+    account::{
+        auth::{AuthRpoFalcon512Acl, AuthRpoFalcon512AclConfig},
+        faucets::BasicFungibleFaucet,
+    },
     AuthScheme,
 };
 use miden_objects::{
@@ -50,8 +53,7 @@ impl From<TokenWrapperAccount> for AccountComponent {
                 ]))
             ]).expect("basic fungible faucet component should satisfy the requirements of a valid account component")
                 .with_supported_type(AccountType::FungibleFaucet)
-        }
-
+    }
 }
 
 fn builder_internal(
@@ -82,19 +84,17 @@ pub fn create_token_wrapper_account(
     origin_address: [Felt; 3],
     account_storage_mode: AccountStorageMode,
     auth_scheme: AuthScheme,
-) -> Result<(Account, Word), AccountError> {
+) -> Result<Account, AccountError> {
     let auth_component: AuthRpoFalcon512Acl = match auth_scheme {
-        AuthScheme::RpoFalcon512 { pub_key } => {
-            Ok(AuthRpoFalcon512Acl::new(pub_key, AuthRpoFalcon512AclConfig::new().with_auth_trigger_procedures(
-                vec![BasicFungibleFaucet::distribute_digest()]
-            ))?)
-        },
-        _ => {
-            Err(AccountError::other("unsupported auth scheme"))
-        }
+        AuthScheme::RpoFalcon512 { pub_key } => Ok(AuthRpoFalcon512Acl::new(
+            pub_key,
+            AuthRpoFalcon512AclConfig::new()
+                .with_auth_trigger_procedures(vec![BasicFungibleFaucet::distribute_digest()]),
+        )?),
+        _ => Err(AccountError::other("unsupported auth scheme")),
     }?;
 
-    let (account, account_seed) = builder_internal(
+    let account = builder_internal(
         init_seed,
         symbol,
         decimals,
@@ -106,7 +106,7 @@ pub fn create_token_wrapper_account(
     .with_auth_component(auth_component)
     .build()?;
 
-    Ok((account, account_seed))
+    Ok(account)
 }
 
 #[cfg(any(feature = "testing", test))]

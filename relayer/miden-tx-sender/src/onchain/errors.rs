@@ -4,8 +4,8 @@ use miden_client::rpc::RpcError;
 use miden_client::store::StoreError;
 use miden_client::transaction::{TransactionProverError, TransactionRequestError};
 use miden_lib::account::faucets::FungibleFaucetError;
-use miden_objects::{AccountError, AssetError, NoteError, TokenSymbolError};
 use miden_objects::account::AccountId;
+use miden_objects::{AccountError, AssetError, NoteError, TokenSymbolError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
