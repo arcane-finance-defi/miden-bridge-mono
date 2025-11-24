@@ -9,9 +9,10 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-
+use std::fs::read_to_string;
 use miden_assembly::Report;
 use miden_lib::transaction::TransactionKernel;
+use miden_lib::utils::ScriptBuilder;
 use miden_objects::{
     assembly::{
         diagnostics::{IntoDiagnostic, Result},
@@ -71,14 +72,15 @@ fn main() -> Result<()> {
     let notes_dir = source_dir.join(ASM_NOTE_SCRIPTS_DIR);
     let note_target_dir = target_dir.join(ASM_NOTE_SCRIPTS_DIR);
 
+    let mut script_builder = ScriptBuilder::new(false);
+
     // compile note scripts
-    let compiled_event_scripts = compile_event_note_scripts(&events_dir, &events_target_dir)?;
+    let compiled_event_scripts = compile_event_note_scripts(&events_dir, &events_target_dir, &script_builder)?;
 
     // compile contracts
-    let assembler =
-        compile_contracts(&contracts_dir, &target_contracts_dir, compiled_event_scripts)?;
+    compile_contracts(&contracts_dir, &target_contracts_dir, compiled_event_scripts, &mut script_builder)?;
 
-    compile_note_scripts(&notes_dir, &note_target_dir, assembler)?;
+    compile_note_scripts(&notes_dir, &note_target_dir, &script_builder)?;
 
     // Generate note error constants.
     generate_note_error_constants(&source_dir.join(ASM_NOTE_SCRIPTS_DIR), NOTE_ERRORS_FILE)?;
@@ -98,14 +100,16 @@ fn create_assembler() -> Result<Assembler> {
 /// file, and stores the complied files into the "{target_dir}".
 ///
 /// The source files are expected to contain executable programs.
-fn compile_note_scripts(source_dir: &Path, target_dir: &Path, assembler: Assembler) -> Result<()> {
+fn compile_note_scripts(source_dir: &Path, target_dir: &Path, script_builder: &ScriptBuilder) -> Result<()> {
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
     }
 
     for masm_file_path in get_masm_files(source_dir).unwrap() {
         // read the MASM file, parse it, and serialize the parsed AST to bytes
-        let code = assembler.clone().assemble_program(masm_file_path.clone())?;
+        let code = script_builder.clone().compile_note_script(
+            read_to_string(masm_file_path.as_path()).expect("Failed to read file"),
+        ).expect("Failed to compile note_scripts");
 
         let bytes = code.to_bytes();
 
@@ -124,17 +128,19 @@ fn compile_note_scripts(source_dir: &Path, target_dir: &Path, assembler: Assembl
 fn compile_event_note_scripts(
     source_dir: &Path,
     target_dir: &Path,
+    script_builder: &ScriptBuilder
 ) -> Result<BTreeMap<OsString, Word>> {
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
     }
-    let assembler = create_assembler()?;
 
     let mut result = BTreeMap::new();
 
     for masm_file_path in get_masm_files(source_dir).unwrap() {
         // read the MASM file, parse it, and serialize the parsed AST to bytes
-        let code = assembler.clone().assemble_program(masm_file_path.clone())?;
+        let code = script_builder.clone().compile_note_script(
+            read_to_string(masm_file_path.as_path()).expect("Failed to read file"),
+        ).expect("Failed to compile event note_scripts");
 
         let bytes = code.to_bytes();
 
@@ -148,7 +154,7 @@ fn compile_event_note_scripts(
 
         let file_name = masm_file_path.file_name().unwrap().to_owned();
 
-        result.insert(file_name.clone(), NoteScript::new(code).root());
+        result.insert(file_name.clone(), code.root());
     }
     Ok(result)
 }
@@ -164,7 +170,7 @@ pub fn create_library(
         source_code,
         &source_manager,
     )?;
-    let library = assembler.clone().assemble_library([module])?;
+    let library = assembler.assemble_library([module])?;
     Ok(library)
 }
 
@@ -172,7 +178,8 @@ fn compile_contracts(
     source_dir: &Path,
     target_dir: &Path,
     note_code_commitments: BTreeMap<OsString, Word>,
-) -> Result<Assembler, Report> {
+    script_builder: &mut ScriptBuilder,
+) -> Result<(), Report> {
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
     }
@@ -223,13 +230,15 @@ fn compile_contracts(
             replaced_component_code.as_str(),
         )?;
 
+        script_builder.link_static_library(&library).expect("Failed to link library");
+
         assembler = assembler.clone().with_dynamic_library(library.clone())?;
 
         let component_file_path = target_dir.join(name).with_extension(Library::LIBRARY_EXTENSION);
         library.write_to_file(component_file_path).into_diagnostic()?;
     }
 
-    Ok(assembler)
+    Ok(())
 }
 
 // HELPER FUNCTIONS
