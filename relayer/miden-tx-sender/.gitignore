@@ -1,2 +1,5 @@
 target
 .idea
+keystore
+miden_store.sql*
+assets_store.sql*
