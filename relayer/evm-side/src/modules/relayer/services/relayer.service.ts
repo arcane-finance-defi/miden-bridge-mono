@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ExitRepository } from 'src/repositories/services/exit.repository';
 import { MidenRelayerService } from './miden.service';
 import { EVMRelayerService } from './evm.service';
+import { SVMRelayerService } from './solana.service';
 
 const DEFAULT_RELAY_BATCH_SIZE = 20;
 
@@ -15,6 +16,7 @@ export class RelayerService {
     private readonly exits: ExitRepository,
     private readonly miden: MidenRelayerService,
     private readonly evm: EVMRelayerService,
+    private readonly svm: SVMRelayerService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE, { waitForCompletion: true })
@@ -34,6 +36,8 @@ export class RelayerService {
         for (const exit of page) {
           if (exit.to.chainKind === 'miden') {
             await this.miden.relay(exit);
+          } else if (exit.to.chainKind === 'solana') {
+            await this.svm.relay(exit);
           } else {
             await this.evm.relay(exit);
           }

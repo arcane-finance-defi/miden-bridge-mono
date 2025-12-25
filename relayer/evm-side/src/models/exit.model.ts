@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-type ChainKind = 'evm' | 'miden';
+type ChainKind = 'evm' | 'miden' | 'solana';
 
 export class ChainRef {
   @Column({
@@ -20,7 +20,7 @@ export class ChainRef {
 
   @Column({
     name: 'chain_kind',
-    enum: ['evm', 'miden'],
+    enum: ['evm', 'miden', 'solana'],
     enumName: 'networkKind',
   })
   chainKind: ChainKind;

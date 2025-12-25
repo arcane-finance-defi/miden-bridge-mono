@@ -3,7 +3,13 @@ import { ConfigService } from '@nestjs/config';
 
 import { MainConfigService } from './services';
 import { RpcConfigService } from './services/rpc.service';
-import { EVM_BRIDGE_ADDRESSES, EVM_RPCS, MIDEN_RPCS } from './config.const';
+import {
+  EVM_BRIDGE_ADDRESSES,
+  EVM_RPCS,
+  MIDEN_RPCS,
+  SOLANA_BRIDGE_ADDRESSES,
+  SOLANA_RPCS,
+} from './config.const';
 import { BridgeAddressService } from './services/bridge-address.service';
 
 @Module({
@@ -28,6 +34,16 @@ import { BridgeAddressService } from './services/bridge-address.service';
       inject: [MainConfigService, ConfigService],
     },
     {
+      provide: SOLANA_RPCS,
+      useFactory(main: MainConfigService, config: ConfigService) {
+        return RpcConfigService.connectSolanaChains(
+          main.getSolanaChainIds(),
+          config,
+        );
+      },
+      inject: [MainConfigService, ConfigService],
+    },
+    {
       provide: EVM_BRIDGE_ADDRESSES,
       useFactory(main: MainConfigService, config: ConfigService) {
         return BridgeAddressService.getBridgeAddress(
@@ -37,7 +53,24 @@ import { BridgeAddressService } from './services/bridge-address.service';
       },
       inject: [MainConfigService, ConfigService],
     },
+    {
+      provide: SOLANA_BRIDGE_ADDRESSES,
+      useFactory(main: MainConfigService, config: ConfigService) {
+        return BridgeAddressService.getSolanaBridgeAddress(
+          main.getSolanaChainIds(),
+          config,
+        );
+      },
+      inject: [MainConfigService, ConfigService],
+    },
   ],
-  exports: [MainConfigService, EVM_RPCS, MIDEN_RPCS, EVM_BRIDGE_ADDRESSES],
+  exports: [
+    MainConfigService,
+    EVM_RPCS,
+    MIDEN_RPCS,
+    SOLANA_RPCS,
+    EVM_BRIDGE_ADDRESSES,
+    SOLANA_BRIDGE_ADDRESSES,
+  ],
 })
 export class MainConfigModule {}

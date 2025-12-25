@@ -16,6 +16,8 @@ import {
 import { RepositoriesModule } from 'src/repositories/repositories.module';
 import { ExitRepository } from 'src/repositories/services/exit.repository';
 import { ScansRepository } from 'src/repositories/services/scans.repository';
+import { KindService } from '../chains/kind/kind.service';
+import { ChainsModule } from '../chains/chains.module';
 
 function generateKey(chainId): string {
   return `miden-poller-${chainId}`;
@@ -24,14 +26,26 @@ function generateKey(chainId): string {
 function generateProvider(chainId): FactoryProvider<PollerService> {
   return {
     provide: generateKey(chainId),
-    useFactory(rpcs: Map<bigint, MidenApiService>, exits, scans, config) {
+    useFactory(
+      rpcs: Map<bigint, MidenApiService>,
+      exits,
+      scans,
+      config,
+      kindService,
+    ) {
       const rpc = rpcs.get(chainId);
       if (rpc == null) {
         throw new Error(`Unknown miden chain with chainId: ${chainId}`);
       }
-      return new PollerService(chainId, rpc, exits, scans, config);
+      return new PollerService(chainId, rpc, exits, scans, config, kindService);
     },
-    inject: [MIDEN_RPCS, ExitRepository, ScansRepository, MainConfigService],
+    inject: [
+      MIDEN_RPCS,
+      ExitRepository,
+      ScansRepository,
+      MainConfigService,
+      KindService,
+    ],
   };
 }
 
@@ -43,20 +57,27 @@ function generateAsyncProvider(index): FactoryProvider<PollerService> {
       rpcs: Map<bigint, MidenApiService>,
       exits,
       scans,
+      kindService,
     ) {
       const chainId = config.getMidenChainIds()[index];
       const rpc = rpcs.get(chainId);
       if (rpc == null) {
         throw new Error(`Unknown miden chain with chainId: ${chainId}`);
       }
-      return new PollerService(chainId, rpc, exits, scans, config);
+      return new PollerService(chainId, rpc, exits, scans, config, kindService);
     },
-    inject: [MainConfigService, MIDEN_RPCS, ExitRepository, ScansRepository],
+    inject: [
+      MainConfigService,
+      MIDEN_RPCS,
+      ExitRepository,
+      ScansRepository,
+      KindService,
+    ],
   };
 }
 
 @Module({
-  imports: [MainConfigModule, RepositoriesModule],
+  imports: [MainConfigModule, RepositoriesModule, ChainsModule],
 })
 export class MidenModule extends ConfigurableModuleClass {
   static register({ chainIds }: MidenModuleOptions): DynamicModule {
