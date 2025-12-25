@@ -40,7 +40,9 @@ pub async fn insert_new_fungible_faucet(
         .with_auth_component(AuthRpoFalcon512Acl::new(
             pub_key.into(),
             AuthRpoFalcon512AclConfig::new()
-                .with_auth_trigger_procedures(vec![BasicFungibleFaucet::distribute_digest()]),
+                .with_auth_trigger_procedures(vec![BasicFungibleFaucet::distribute_digest()])
+                .with_allow_unauthorized_input_notes(true)
+                .with_allow_unauthorized_output_notes(true),
         )?)
         .with_component(TokenWrapperAccount::new(origin_network, origin_address))
         .with_component(BasicFungibleFaucet::new(symbol, decimals, MAX_SUPPLY).unwrap())
