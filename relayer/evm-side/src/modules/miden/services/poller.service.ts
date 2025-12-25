@@ -27,7 +27,7 @@ export class PollerService {
     );
   }
 
-  // @Cron(CronExpression.EVERY_10_SECONDS, { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_10_SECONDS, { waitForCompletion: true })
   async poll() {
     const lastScannedHeight = await this.scans.getLastScannedBlockFor(
       this.chainId,
