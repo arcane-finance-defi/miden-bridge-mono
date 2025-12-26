@@ -10,45 +10,44 @@ use miden_objects::{
 
 use super::bridge::croschain;
 
-pub fn new_crosschain_note(
-    serial_number: Word,
-    output_serial_number: Word,
-    dest_chain: Felt,
-    dest_addr: [Felt; 3],
-    unblock_timestamp: Option<u32>,
-    faucet_id: AccountId,
-    asset_amount: u64,
-    sender: AccountId,
-    note_tag: NoteTag,
-) -> Result<Note, NoteError> {
+pub struct CrosshainNoteParams {
+    pub serial_number: Word,
+    pub output_serial_number: Word,
+    pub dest_chain: Felt,
+    pub dest_addr: [Felt; 4],
+    pub unblock_timestamp: Option<u32>,
+    pub faucet_id: AccountId,
+    pub asset_amount: u64,
+    pub sender: AccountId,
+    pub note_tag: NoteTag,
+}
+
+pub fn new_crosschain_note(params: CrosshainNoteParams) -> Result<Note, NoteError> {
     let note = Note::new(
-        NoteAssets::new(vec![FungibleAsset::new(faucet_id, asset_amount)
-            .map_err(|e| NoteError::AddFungibleAssetBalanceError(e))?
+        NoteAssets::new(vec![FungibleAsset::new(params.faucet_id, params.asset_amount)
+            .map_err(NoteError::AddFungibleAssetBalanceError)?
             .into()])?,
         NoteMetadata::new(
-            sender,
+            params.sender,
             NoteType::Private,
-            note_tag,
+            params.note_tag,
             NoteExecutionHint::always(),
             Felt::ZERO,
         )?,
         NoteRecipient::new(
-            serial_number,
+            params.serial_number,
             croschain(),
             NoteInputs::new(vec![
-                output_serial_number[3],
-                output_serial_number[2],
-                output_serial_number[1],
-                output_serial_number[0],
-                dest_chain,
-                dest_addr[2],
-                dest_addr[1],
-                dest_addr[0],
-                Felt::new(unblock_timestamp.unwrap_or(0) as u64),
-                Felt::ZERO,
-                Felt::ZERO,
-                Felt::ZERO,
-                Felt::ZERO,
+                params.output_serial_number[3],
+                params.output_serial_number[2],
+                params.output_serial_number[1],
+                params.output_serial_number[0],
+                params.dest_chain,
+                params.dest_addr[3],
+                params.dest_addr[2],
+                params.dest_addr[1],
+                params.dest_addr[0],
+                Felt::new(params.unblock_timestamp.unwrap_or(0) as u64),
             ])?,
         ),
     );

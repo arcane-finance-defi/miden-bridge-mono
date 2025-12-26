@@ -5,20 +5,21 @@ use std::{
     env,
     ffi::{OsStr, OsString},
     fmt::Write,
-    fs, io,
+    fs,
+    fs::read_to_string,
+    io,
     path::{Path, PathBuf},
     sync::Arc,
 };
-use std::fs::read_to_string;
+
 use miden_assembly::Report;
-use miden_lib::transaction::TransactionKernel;
-use miden_lib::utils::ScriptBuilder;
+use miden_lib::{transaction::TransactionKernel, utils::ScriptBuilder};
 use miden_objects::{
     assembly::{
         diagnostics::{IntoDiagnostic, Result},
         Assembler, DefaultSourceManager, Library, LibraryPath, Module, ModuleKind,
     },
-    note::{NoteScript, NoteTag},
+    note::NoteTag,
     utils::Serializable,
     Word,
 };
@@ -38,6 +39,11 @@ const ASM_EVENT_SCRIPTS_DIR: &str = "events";
 const ASM_CONTRACTS_DIR: &str = "contracts";
 const NOTE_ERRORS_FILE: &str = "src/errors/note_errors.rs";
 const ACCOUNT_ERRORS_FILE: &str = "src/errors/account_errors.rs";
+
+#[cfg(feature = "testing")]
+const DEBUG_MODE_ENABLED: bool = true;
+#[cfg(not(feature = "testing"))]
+const DEBUG_MODE_ENABLED: bool = false;
 
 // PRE-PROCESSING
 // ================================================================================================
@@ -72,13 +78,19 @@ fn main() -> Result<()> {
     let notes_dir = source_dir.join(ASM_NOTE_SCRIPTS_DIR);
     let note_target_dir = target_dir.join(ASM_NOTE_SCRIPTS_DIR);
 
-    let mut script_builder = ScriptBuilder::new(false);
+    let mut script_builder = ScriptBuilder::new(DEBUG_MODE_ENABLED);
 
     // compile note scripts
-    let compiled_event_scripts = compile_event_note_scripts(&events_dir, &events_target_dir, &script_builder)?;
+    let compiled_event_scripts =
+        compile_event_note_scripts(&events_dir, &events_target_dir, &script_builder)?;
 
     // compile contracts
-    compile_contracts(&contracts_dir, &target_contracts_dir, compiled_event_scripts, &mut script_builder)?;
+    compile_contracts(
+        &contracts_dir,
+        &target_contracts_dir,
+        compiled_event_scripts,
+        &mut script_builder,
+    )?;
 
     compile_note_scripts(&notes_dir, &note_target_dir, &script_builder)?;
 
@@ -100,16 +112,23 @@ fn create_assembler() -> Result<Assembler> {
 /// file, and stores the complied files into the "{target_dir}".
 ///
 /// The source files are expected to contain executable programs.
-fn compile_note_scripts(source_dir: &Path, target_dir: &Path, script_builder: &ScriptBuilder) -> Result<()> {
+fn compile_note_scripts(
+    source_dir: &Path,
+    target_dir: &Path,
+    script_builder: &ScriptBuilder,
+) -> Result<()> {
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
     }
 
     for masm_file_path in get_masm_files(source_dir).unwrap() {
         // read the MASM file, parse it, and serialize the parsed AST to bytes
-        let code = script_builder.clone().compile_note_script(
-            read_to_string(masm_file_path.as_path()).expect("Failed to read file"),
-        ).expect("Failed to compile note_scripts");
+        let code = script_builder
+            .clone()
+            .compile_note_script(
+                read_to_string(masm_file_path.as_path()).expect("Failed to read file"),
+            )
+            .expect("Failed to compile note_scripts");
 
         let bytes = code.to_bytes();
 
@@ -128,7 +147,7 @@ fn compile_note_scripts(source_dir: &Path, target_dir: &Path, script_builder: &S
 fn compile_event_note_scripts(
     source_dir: &Path,
     target_dir: &Path,
-    script_builder: &ScriptBuilder
+    script_builder: &ScriptBuilder,
 ) -> Result<BTreeMap<OsString, Word>> {
     if let Err(e) = fs::create_dir_all(target_dir) {
         println!("Failed to create note_scripts directory: {}", e);
@@ -138,9 +157,12 @@ fn compile_event_note_scripts(
 
     for masm_file_path in get_masm_files(source_dir).unwrap() {
         // read the MASM file, parse it, and serialize the parsed AST to bytes
-        let code = script_builder.clone().compile_note_script(
-            read_to_string(masm_file_path.as_path()).expect("Failed to read file"),
-        ).expect("Failed to compile event note_scripts");
+        let code = script_builder
+            .clone()
+            .compile_note_script(
+                read_to_string(masm_file_path.as_path()).expect("Failed to read file"),
+            )
+            .expect("Failed to compile event note_scripts");
 
         let bytes = code.to_bytes();
 

@@ -2,17 +2,17 @@ use miden_bridge::{
     accounts::{testing::create_token_wrapper_account_builder, token_wrapper::bridge_note_tag},
     errors::note_errors::ERR_CROSSCHAIN_TOO_EARLY_EXECUTION,
     notes::bridge::{bridge, croschain},
+    utils::{evm_address_to_felts, solana_address_to_felts},
 };
 use miden_lib::{
     account::{
         auth::{AuthRpoFalcon512Acl, AuthRpoFalcon512AclConfig},
         faucets::BasicFungibleFaucet,
     },
-    transaction::TransactionKernel,
     utils::ScriptBuilder,
 };
 use miden_objects::{
-    account::{AccountId, AccountStorageMode, AuthSecretKey},
+    account::{auth::AuthSecretKey, Account, AccountId, AccountStorageMode},
     asset::{FungibleAsset, TokenSymbol},
     crypto::{
         dsa::rpo_falcon512::{PublicKey, SecretKey},
@@ -23,10 +23,11 @@ use miden_objects::{
         NoteTag, NoteType,
     },
     testing::account_id::ACCOUNT_ID_SENDER,
-    transaction::{OutputNote, TransactionScript},
+    transaction::OutputNote,
     Felt, FieldElement, Word,
 };
 use miden_testing::{AccountState, Auth, MockChain};
+use rstest::*;
 
 use crate::assert_transaction_executor_error;
 
@@ -39,8 +40,19 @@ pub fn get_new_pk_and_authenticator(seed: [Felt; 4]) -> (PublicKey, AuthSecretKe
 
 const DAY: u32 = 60 * 60 * 24;
 
-#[test]
-fn should_issue_public_bridge_note() -> anyhow::Result<()> {
+enum AddressKind {
+    EVM,
+    SOLANA,
+}
+
+#[rstest]
+#[case(AddressKind::EVM, "0xc80993A64078fc91eA4dc9b104F23441297EDD84")]
+#[case(AddressKind::SOLANA, "G1XMT99oDxSsYd4KvTcutCTmSGL2h8d1KDV7B1oWy7Qv")]
+#[tokio::test]
+async fn should_issue_public_bridge_note(
+    #[case] chain: AddressKind,
+    #[case] address: &str,
+) -> anyhow::Result<()> {
     let mut mock_chain_builder = MockChain::builder();
 
     let (pub_key, _secret_key) =
@@ -59,13 +71,15 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
     wrapper_builder
         .clone()
         .with_auth_component(AuthRpoFalcon512Acl::new(
-            pub_key,
+            pub_key.into(),
             AuthRpoFalcon512AclConfig::new()
-                .with_auth_trigger_procedures(vec![BasicFungibleFaucet::distribute_digest()]),
+                .with_auth_trigger_procedures(vec![BasicFungibleFaucet::distribute_digest()])
+                .with_allow_unauthorized_input_notes(true)
+                .with_allow_unauthorized_output_notes(true),
         )?)
         .build()?;
 
-    let mut wrapper = mock_chain_builder.add_account_from_builder(
+    let mut wrapper: Account = mock_chain_builder.add_account_from_builder(
         Auth::Acl {
             auth_trigger_procedures: vec![BasicFungibleFaucet::distribute_digest()],
             allow_unauthorized_input_notes: true,
@@ -75,8 +89,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         AccountState::Exists,
     )?;
 
-    let mut mock_chain = mock_chain_builder.build()?;
-
+    let initial_block_timestamp: u32 = MockChain::TIMESTAMP_START_SECS;
     let fungible_asset = FungibleAsset::new(wrapper.id(), 1000).unwrap().into();
 
     let mut rng = RpoRandomCoin::new(Word::from([
@@ -88,12 +101,13 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
 
     let output_serial_num = rng.draw_word();
 
-    let receiver_address = [rng.draw_element(), rng.draw_element(), rng.draw_element()];
-
-    let call_address = [Felt::ZERO, Felt::ZERO, Felt::ZERO];
+    let receiver_address = match chain {
+        AddressKind::EVM => evm_address_to_felts(address).unwrap(),
+        AddressKind::SOLANA => solana_address_to_felts(address).unwrap(),
+    };
 
     let chain_id: u64 = 123;
-    let unlock_timestamp = mock_chain.latest_block_header().timestamp() + 7 * DAY;
+    let unlock_timestamp = initial_block_timestamp + 7 * DAY;
 
     let note_inputs = NoteInputs::new(vec![
         output_serial_num[0],
@@ -104,11 +118,8 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         receiver_address[0],
         receiver_address[1],
         receiver_address[2],
+        receiver_address[3],
         Felt::new(unlock_timestamp as u64),
-        Felt::ZERO,
-        call_address[0],
-        call_address[1],
-        call_address[2],
     ])?;
 
     let note = Note::new(
@@ -127,10 +138,13 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         ),
     );
 
-    mock_chain.add_pending_note(OutputNote::Full(note.clone()));
+    mock_chain_builder.add_output_note(OutputNote::Full(note.clone()));
+
+    let mut mock_chain: MockChain = mock_chain_builder.build()?;
+
     mock_chain.prove_next_block().expect("Unable to prove next block");
 
-    let mint_tx_inputs = mock_chain.get_transaction_inputs(wrapper.clone(), None, &[], &[])?;
+    let mint_tx_inputs = mock_chain.get_transaction_inputs(&wrapper.clone(), &[], &[])?;
 
     let mint_tx_script_code = format!(
         "
@@ -168,7 +182,8 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         .tx_script(mint_tx_script)
         .tx_inputs(mint_tx_inputs)
         .build()?
-        .execute_blocking()
+        .execute()
+        .await
         .expect("Unable to execute mint tx");
 
     mock_chain.add_pending_executed_transaction(&executed_mint_transaction.clone())?;
@@ -190,10 +205,7 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
             receiver_address[0],
             receiver_address[1],
             receiver_address[2],
-            Felt::ZERO,
-            call_address[0],
-            call_address[1],
-            call_address[2],
+            receiver_address[3],
         ])?,
     );
 
@@ -213,14 +225,15 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
     );
 
     let tx_inputs =
-        mock_chain.get_transaction_inputs(wrapper.clone(), None, &[note.clone().id()], &[])?;
+        mock_chain.get_transaction_inputs(&wrapper.clone(), &[note.clone().id()], &[])?;
 
     let failed_executed_transaction = mock_chain
         .build_tx_context(wrapper.clone(), &[], &[])?
         .tx_inputs(tx_inputs)
         .extend_expected_output_notes(vec![OutputNote::Full(expected_note.clone())])
         .build()?
-        .execute_blocking();
+        .execute()
+        .await;
 
     assert_transaction_executor_error!(
         failed_executed_transaction,
@@ -232,14 +245,15 @@ fn should_issue_public_bridge_note() -> anyhow::Result<()> {
         .expect("Unable to generate next block");
 
     let tx_inputs =
-        mock_chain.get_transaction_inputs(wrapper.clone(), None, &[note.clone().id()], &[])?;
+        mock_chain.get_transaction_inputs(&wrapper.clone(), &[note.clone().id()], &[])?;
 
     let executed_transaction = mock_chain
         .build_tx_context(wrapper.clone(), &[], &[])?
         .tx_inputs(tx_inputs.clone())
         .extend_expected_output_notes(vec![OutputNote::Full(expected_note.clone())])
         .build()?
-        .execute_blocking()
+        .execute()
+        .await
         .expect("Unable to execute crosschain consume transaction");
 
     assert_eq!(executed_transaction.output_notes().num_notes(), 1);

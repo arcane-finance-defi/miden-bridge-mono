@@ -30,11 +30,7 @@ const.INPUTS_INDEX_LOC=1
 #!   - dest_chain_addr_felt1
 #!   - dest_chain_addr_felt2
 #!   - dest_chain_addr_felt3
-#!   - calldata_bytes_length
-#!   - calldata
-#!   - call_addr_felt1
-#!   - call_addr_felt2
-#!   - call_addr_felt3
+#!   - dest_chain_addr_felt4
 #! Outputs: [pad(16)]
 #!
 #! Where:
@@ -52,8 +48,9 @@ export.bridge.2
     # burning the asset
     exec.faucet::burn
     # => [ASSET, ...]
+    reversew
 
-    dup.8 add.12
+    push.9
     # => [inputs_num, ...]
 
     u32divmod.4 neq.0 add
@@ -65,7 +62,7 @@ export.bridge.2
     loc_load.INPUTS_INDEX_LOC loc_load.INPUTS_NUM_WORDS_LOC lt
     while.true
         loc_load.INPUTS_INDEX_LOC mul.4 add.INPUTS_SLOT
-        mem_storew_be dropw
+        mem_storew_le dropw
         loc_load.INPUTS_INDEX_LOC add.1 loc_store.INPUTS_INDEX_LOC
         loc_load.INPUTS_INDEX_LOC loc_load.INPUTS_NUM_WORDS_LOC lt
     end

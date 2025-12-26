@@ -18,11 +18,11 @@ use miden_objects::{
 use crate::accounts::components::token_wrapper_account_library;
 
 const BRIDGE_TAG_USECASE: u16 = 12354;
-const BRIDGE_TAG: LazyLock<NoteTag> =
+static BRIDGE_TAG: LazyLock<NoteTag> =
     LazyLock::new(|| NoteTag::for_local_use_case(BRIDGE_TAG_USECASE, 0).unwrap());
 
 pub fn bridge_note_tag() -> NoteTag {
-    BRIDGE_TAG.clone()
+    *BRIDGE_TAG
 }
 
 pub struct TokenWrapperAccount {
@@ -75,17 +75,21 @@ fn builder_internal(
         ))
 }
 
+pub struct CreateTokenWrapperAccountParams {
+    pub init_seed: [u8; 32],
+    pub symbol: TokenSymbol,
+    pub decimals: u8,
+    pub max_supply: Felt,
+    pub origin_network: u64,
+    pub origin_address: [Felt; 3],
+    pub account_storage_mode: AccountStorageMode,
+    pub auth_scheme: AuthScheme,
+}
+
 pub fn create_token_wrapper_account(
-    init_seed: [u8; 32],
-    symbol: TokenSymbol,
-    decimals: u8,
-    max_supply: Felt,
-    origin_network: u64,
-    origin_address: [Felt; 3],
-    account_storage_mode: AccountStorageMode,
-    auth_scheme: AuthScheme,
+    params: CreateTokenWrapperAccountParams,
 ) -> Result<Account, AccountError> {
-    let auth_component: AuthRpoFalcon512Acl = match auth_scheme {
+    let auth_component: AuthRpoFalcon512Acl = match params.auth_scheme {
         AuthScheme::RpoFalcon512 { pub_key } => Ok(AuthRpoFalcon512Acl::new(
             pub_key,
             AuthRpoFalcon512AclConfig::new()
@@ -95,13 +99,13 @@ pub fn create_token_wrapper_account(
     }?;
 
     let account = builder_internal(
-        init_seed,
-        symbol,
-        decimals,
-        max_supply,
-        origin_network,
-        origin_address,
-        account_storage_mode,
+        params.init_seed,
+        params.symbol,
+        params.decimals,
+        params.max_supply,
+        params.origin_network,
+        params.origin_address,
+        params.account_storage_mode,
     )?
     .with_auth_component(auth_component)
     .build()?;

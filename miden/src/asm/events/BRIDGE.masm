@@ -1,7 +1,7 @@
 use.miden::active_account
 use.miden::active_note
 
-const.MIN_INPUTS_COUNT=12
+const.MIN_INPUTS_COUNT=14
 
 # ERRORS
 # =================================================================================================

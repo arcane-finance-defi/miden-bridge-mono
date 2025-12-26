@@ -60,15 +60,13 @@ fn build_recipient(receiver: String) -> Result<(), CliError> {
         RpoRandomCoin::new(Word::new([Felt::new(1), Felt::new(2), Felt::new(3), Felt::new(4)]));
 
     let serial_number: Word = rng.draw_word();
-    let receiver =
-        AccountId::from_hex(&receiver.as_str()).map_err(|e| CliError::ParseAccountIdError(e))?;
+    let receiver = AccountId::from_hex(receiver.as_str()).map_err(CliError::ParseAccountIdError)?;
 
-    let recipient = build_p2id_recipient(receiver, serial_number.clone())
-        .map_err(|e| CliError::BuildNoteRecipientError(e))?;
+    let recipient =
+        build_p2id_recipient(receiver, serial_number).map_err(CliError::BuildNoteRecipientError)?;
 
     let recipient_digest = recipient.digest().to_hex();
-    let serial_number =
-        word_to_hex(&serial_number).map_err(|e| CliError::WordHexEncodingError(e))?;
+    let serial_number = word_to_hex(&serial_number).map_err(CliError::WordHexEncodingError)?;
 
     println!("Recipient: {recipient_digest}");
     println!("Serial number: {serial_number}");
@@ -85,32 +83,30 @@ fn restore_note(
     let serial_number = Word::try_from(&serial_num_hex)
         .map_err(|e| CliError::BytesHexDecodingError(e.to_string()))?;
 
-    let receiver =
-        AccountId::from_hex(&receiver.as_str()).map_err(|e| CliError::ParseAccountIdError(e))?;
+    let receiver = AccountId::from_hex(receiver.as_str()).map_err(CliError::ParseAccountIdError)?;
 
-    let recipient = build_p2id_recipient(receiver, serial_number)
-        .map_err(|e| CliError::BuildNoteRecipientError(e))?;
+    let recipient =
+        build_p2id_recipient(receiver, serial_number).map_err(CliError::BuildNoteRecipientError)?;
 
     let faucet_id =
-        AccountId::from_hex(&faucet_id.as_str()).map_err(|e| CliError::ParseAccountIdError(e))?;
+        AccountId::from_hex(faucet_id.as_str()).map_err(CliError::ParseAccountIdError)?;
 
-    let bridged_amount = u64::from_str_radix(bridged_amount.as_str(), 10)
-        .map_err(|e| CliError::InvalidAmountError(e))?;
+    let bridged_amount =
+        bridged_amount.as_str().parse::<u64>().map_err(CliError::InvalidAmountError)?;
 
-    let asset = FungibleAsset::new(faucet_id, bridged_amount)
-        .map_err(|e| CliError::FungibleAssetBuildError(e))?;
+    let asset =
+        FungibleAsset::new(faucet_id, bridged_amount).map_err(CliError::FungibleAssetBuildError)?;
 
     let note = Note::new(
-        NoteAssets::new(vec![Asset::from(asset)])
-            .map_err(|e| CliError::BuildExportableNoteError(e))?,
+        NoteAssets::new(vec![Asset::from(asset)]).map_err(CliError::BuildExportableNoteError)?,
         NoteMetadata::new(
             faucet_id,
             NoteType::Private,
-            NoteTag::for_local_use_case(1, 0).map_err(|e| CliError::BuildExportableNoteError(e))?,
+            NoteTag::for_local_use_case(1, 0).map_err(CliError::BuildExportableNoteError)?,
             NoteExecutionHint::Always,
             Felt::ZERO,
         )
-        .map_err(|e| CliError::BuildExportableNoteError(e))?,
+        .map_err(CliError::BuildExportableNoteError)?,
         recipient,
     );
 
@@ -127,7 +123,7 @@ fn restore_note(
         after_block_num: 0.into(),
         tag: Some(
             NoteTag::for_local_use_case(BRIDGE_USECASE, 0)
-                .map_err(|e| CliError::BuildExportableNoteError(e))?,
+                .map_err(CliError::BuildExportableNoteError)?,
         ),
     };
 
