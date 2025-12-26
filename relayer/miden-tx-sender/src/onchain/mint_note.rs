@@ -54,13 +54,13 @@ pub async fn mint_asset(
                 Felt::new(0),
             )
             .map_err(OnchainError::NoteError)?,
-            recipient.into(),
+            recipient,
             assets,
         ))])
         .build()?;
 
     let transaction =
-        execute_tx(client, tx_request, faucet_id).await.map_err(OnchainError::from)?;
+        execute_tx(client, tx_request, faucet_id).await?;
 
     Ok(transaction)
 }

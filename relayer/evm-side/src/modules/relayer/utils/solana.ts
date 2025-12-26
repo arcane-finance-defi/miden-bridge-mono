@@ -1,66 +1,42 @@
 import {
   address,
   Address,
+  getAddressEncoder,
   getBytesEncoder,
   getProgramDerivedAddress,
   getStructEncoder,
   getU16Encoder,
+  getU32Encoder,
+  getU64Encoder,
   ReadonlyUint8Array,
 } from '@solana/kit';
 import { TransactionInstruction, Ed25519Program } from '@solana/web3.js';
 import { createHash } from 'node:crypto';
 
 export interface CrossChainPayload {
-  sender: Uint8Array;
-  to: Uint8Array;
+  sender: Address;
+  to: Address;
   amount: bigint;
   dest_chain: number;
   nonce: bigint;
 }
 
-function addressToBuffer(address: Buffer | Uint8Array | number[]): Buffer {
-  if (Buffer.isBuffer(address)) {
-    return address;
-  } else if (address instanceof Uint8Array) {
-    return Buffer.from(address);
-  } else if (Array.isArray(address)) {
-    return Buffer.from(address);
-  }
-  throw new Error('Invalid address format');
+function getCrossChainPayloadEncoder() {
+  return getStructEncoder([
+    ['sender', getAddressEncoder()],
+    ['to', getAddressEncoder()],
+    ['amount', getU64Encoder()],
+    ['dest_chain', getU32Encoder()],
+    ['nonce', getU64Encoder()],
+  ]);
 }
 
 // Function to calculate the correct message hash
 export const calculateMessageHash = (
   crossChainPayload: CrossChainPayload,
 ): Uint8Array => {
-  // Serialize the CrossChainPayload similar to Borsh serialization
-  const buffer = Buffer.alloc(32 + 32 + 8 + 2 + 8); // [u8;32] + [u8;32] + u64 + u16 + u64
-  let offset = 0;
-
-  // sender: [u8; 32]
-  const senderBuf = addressToBuffer(crossChainPayload.sender);
-  senderBuf.copy(buffer, offset);
-  offset += 32;
-
-  // to: [u8; 32]
-  const toBuf = addressToBuffer(crossChainPayload.to);
-  toBuf.copy(buffer, offset);
-  offset += 32;
-
-  // amount: u64 (8 bytes, little endian)
-  const amountBuf = Buffer.alloc(8);
-  amountBuf.writeBigUInt64LE(BigInt(crossChainPayload.amount.toString()), 0);
-  amountBuf.copy(buffer, offset);
-  offset += 8;
-
-  // dest_chain: u16 (2 bytes, little endian)
-  buffer.writeUInt16LE(crossChainPayload.dest_chain, offset);
-  offset += 2;
-
-  // nonce: u64 (8 bytes, little endian)
-  const nonceBuf = Buffer.alloc(8);
-  nonceBuf.writeBigUInt64LE(BigInt(crossChainPayload.nonce.toString()), 0);
-  nonceBuf.copy(buffer, offset);
+  const encoder = getCrossChainPayloadEncoder();
+  const buffer = Buffer.from(encoder.encode(crossChainPayload));
 
   // Calculate SHA-256 hash (Solana uses hashv which is effectively SHA-256)
   const hash = createHash('sha256').update(buffer).digest();

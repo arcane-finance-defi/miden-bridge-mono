@@ -18,9 +18,5 @@ log = "0.4.27"
 miden-bridge = { path = "../../miden" }
 miden-client = { version = "0.12", features = ["tonic"] }
 miden-client-sqlite-store = { version = "0.12" }
-miden-crypto = "0.18"
 miden-objects = "0.12"
 miden-lib = "0.12"
-
-[patch.crates-io]
-miden-client = { version = "0.12", git = "https://github.com/0xMiden/miden-client", rev = "fb6b71a60d526e2c0135bda57b64070e825b9da8"}

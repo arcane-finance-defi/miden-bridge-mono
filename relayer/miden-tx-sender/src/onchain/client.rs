@@ -6,7 +6,6 @@ use crate::onchain::poll_events::{PolledEvents, poll_events};
 use crate::store::Store;
 use miden_bridge::accounts::token_wrapper::bridge_note_tag;
 use miden_bridge::utils::evm_address_to_felts;
-use miden_client::block::BlockHeader;
 use miden_client::keystore::FilesystemKeyStore;
 use miden_client::note::BlockNumber;
 use miden_client::rpc::{Endpoint, GrpcClient, NodeRpcClient};
@@ -18,7 +17,6 @@ use miden_objects::crypto::rand::RpoRandomCoin;
 use miden_objects::{Felt, MAX_TX_EXECUTION_CYCLES, MIN_TX_EXECUTION_CYCLES, Word};
 use rand::Rng;
 use rand::rngs::StdRng;
-use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use tokio::runtime::Runtime;
@@ -33,35 +31,8 @@ impl OnchainClient {
     pub fn new(rpc_endpoint: String, timeout_ms: u64) -> Self {
         let endpoint = Endpoint::try_from(rpc_endpoint.as_str()).unwrap();
         OnchainClient {
-            rpc: Arc::new(GrpcClient::new(&endpoint, timeout_ms.clone())),
+            rpc: Arc::new(GrpcClient::new(&endpoint, timeout_ms)),
         }
-    }
-
-    pub async fn get_anchor_block(&mut self) -> Result<BlockHeader, OnchainError> {
-        let latest_block_height = self.get_chain_tip().await?;
-
-        let epoch = BlockNumber::from(latest_block_height).block_epoch();
-        let epoch_block_number = BlockNumber::from_epoch(epoch);
-
-        let (epoch_block_header, _) = self
-            .rpc
-            .get_block_header_by_number(Some(epoch_block_number), false)
-            .await
-            .map_err(OnchainError::RpcCallError)?;
-
-        Ok(epoch_block_header)
-    }
-
-    pub async fn get_chain_tip(&mut self) -> Result<BlockNumber, OnchainError> {
-        let sync_response = self
-            .rpc
-            .sync_notes(0u32.into(), None, &BTreeSet::new())
-            .await
-            .map_err(OnchainError::RpcCallError)?;
-
-        let latest_block_height = sync_response.chain_tip;
-
-        Ok(BlockNumber::from(latest_block_height))
     }
 }
 
@@ -112,7 +83,7 @@ async fn mint_note(
     execution_client.sync_state().await?;
 
     let faucet_id = match assets_store
-        .get_faucet_id(asset.origin_network.clone(), &asset.origin_address.clone())
+        .get_faucet_id(asset.origin_network, &asset.origin_address)
         .await?
     {
         Some(id) => id,
@@ -120,7 +91,7 @@ async fn mint_note(
             let account = insert_new_fungible_faucet(
                 execution_client,
                 AccountStorageMode::Public,
-                &keystore,
+                keystore,
                 &asset.asset_symbol,
                 asset.decimals,
                 u64::from(asset.origin_network),
@@ -132,8 +103,8 @@ async fn mint_note(
             let account_id = account.id();
             assets_store
                 .add_faucet_id(
-                    asset.origin_network.clone(),
-                    &asset.origin_address.clone(),
+                    asset.origin_network,
+                    &asset.origin_address,
                     &account_id,
                 )
                 .await?;

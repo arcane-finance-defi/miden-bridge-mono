@@ -8,7 +8,6 @@ mod utils;
 
 use rocket::State as RocketState;
 use std::error::Error;
-use std::sync::Arc;
 
 use crate::config::Config;
 use crate::onchain::OnchainClient;
@@ -51,11 +50,11 @@ async fn mint_note(
     match rx.await {
         Ok(Ok(mint_result)) => Ok(Json(mint_result)),
         Ok(Err(e)) => {
-            warn!("{}, source: {}", e, e.source().unwrap().to_string());
+            warn!("{}, source: {}", e, e.source().unwrap());
             Err((Status::InternalServerError, Json(ErrorResponse { error: e.to_string() })))
         },
         Err(e) => {
-            warn!("{}, source: {}", e, e.source().unwrap().to_string());
+            warn!("{}, source: {}", e, e.source().unwrap());
             Err((Status::InternalServerError, Json(ErrorResponse { error: e.to_string() })))
         },
     }
@@ -87,12 +86,8 @@ async fn poll(from: u32, state: &RocketState<State>) -> Result<Json<PolledEvents
 }
 
 struct State {
-    client: Arc<OnchainClient>,
     sender: Sender<ClientCommand>,
 }
-
-#[derive(Debug)]
-enum MintNoteError {}
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -104,7 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config: Config = figment.extract().expect("config");
 
     let mut onchain: OnchainClient =
-        OnchainClient::new(config.rpc_url().clone(), config.rpc_timeout_ms().clone());
+        OnchainClient::new(config.rpc_url().clone(), config.rpc_timeout_ms());
 
     let (sender, receiver) = tokio::sync::mpsc::channel(10);
 
@@ -112,11 +107,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
         client_process_loop(&mut onchain, receiver, runtime);
     });
-
-    let onchain: OnchainClient =
-        OnchainClient::new(config.rpc_url().clone(), config.rpc_timeout_ms().clone());
     rocket
-        .manage(State { client: Arc::new(onchain), sender })
+        .manage(State { sender })
         .mount("/".to_string(), routes![chain_tip, mint_note, poll])
         .launch()
         .await

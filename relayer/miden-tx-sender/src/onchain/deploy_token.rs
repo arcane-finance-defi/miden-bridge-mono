@@ -20,7 +20,7 @@ pub async fn insert_new_fungible_faucet(
     symbol: &str,
     decimals: u8,
     origin_network: u64,
-    origin_address: [Felt; 3],
+    origin_address: [Felt; 4],
 ) -> Result<Account, ClientError> {
     let mut rng = rng();
 

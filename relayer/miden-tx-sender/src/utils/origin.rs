@@ -1,24 +1,26 @@
 use miden_bridge::utils::{AddressFormatError, felts_to_evm_addresses};
 use miden_objects::Word;
 
-pub fn decode_slot_into_origin_info(slot: Word) -> Result<(u32, String), AddressFormatError> {
-    let (origin_network, origin_address) = slot.split_at_checked(1).unwrap();
+pub fn decode_slots_into_origin_info(address_slot: Word, chain_slot: Word) -> Result<(u32, String), AddressFormatError> {
     let origin_address =
-        felts_to_evm_addresses([origin_address[2], origin_address[1], origin_address[0]])?;
+        felts_to_evm_addresses([address_slot[3], address_slot[2], address_slot[1], address_slot[0]])?;
 
-    Ok((origin_network[0].as_int().try_into().unwrap(), origin_address.to_checksum(None)))
+    Ok((chain_slot[0].as_int().try_into().unwrap(), origin_address.to_checksum(None)))
 }
 
 #[cfg(test)]
 mod tests {
     use super::Word;
-    use super::decode_slot_into_origin_info;
+    use super::decode_slots_into_origin_info;
     #[test]
     fn should_decode_slot_value() {
-        let slot =
-            Word::parse("0x8238010000000000fd9ae61e000000008e784c5a1efa36822f476def8a5e8141")
+        let address_slot =
+            Word::parse("0x0000000000000000fd9ae61e000000008e784c5a1efa36822f476def8a5e8141")
                 .unwrap();
-        let (origin_network, origin_address) = decode_slot_into_origin_info(slot).unwrap();
+        let chain_slot =
+            Word::parse("0x8238010000000000000000000000000000000000000000000000000000000000")
+                .unwrap();
+        let (origin_network, origin_address) = decode_slots_into_origin_info(address_slot, chain_slot).unwrap();
         assert_eq!(origin_network, 80002);
         assert_eq!(
             origin_address.to_lowercase(),

@@ -14,7 +14,6 @@ import {
 } from '../generated/solana';
 import {
   address,
-  getAddressDecoder,
   Rpc,
   SolanaRpcApi,
   pipe,
@@ -28,6 +27,7 @@ import {
   getBase64EncodedWireTransaction,
   createKeyPairSignerFromBytes,
   setTransactionMessageLifetimeUsingBlockhash,
+  getAddressDecoder,
 } from '@solana/kit';
 import {
   findAssociatedTokenPda,
@@ -82,20 +82,19 @@ export class SVMRelayerService {
 
     const payload: SwapPayload = {
       amount: BigInt(exit.assetAmount.toFixed()),
-      recipient: getAddressDecoder().decode(
-        Buffer.from(exit.receiver.replace('0x', ''), 'hex'),
-      ),
+      recipient: address(exit.receiver),
       sourceChain: Number.parseInt(exit.from.chainId.toString()) % 2 ** 16,
       destChain: Number.parseInt(exit.to.chainId.toString()),
       nonce: BigInt(exit.id),
     };
 
     const crossChainPayload: CrossChainPayload = {
-      sender:
+      sender: getAddressDecoder().decode(
         exit.from.chainKind === 'miden'
           ? Buffer.alloc(32)
           : Buffer.from(exit.sender.replace('0x', ''), 'hex'),
-      to: Buffer.from(exit.receiver.replace('0x', ''), 'hex'),
+      ),
+      to: payload.recipient,
       amount: payload.amount,
       dest_chain: payload.destChain,
       nonce: payload.nonce,
@@ -139,7 +138,7 @@ export class SVMRelayerService {
         swapMessage: messagePDA,
         payload,
         messageHash,
-        originalSender: crossChainPayload.sender,
+        originalSender: getAddressEncoder().encode(crossChainPayload.sender),
         user,
       }),
       getSubmitSignatureInstruction({

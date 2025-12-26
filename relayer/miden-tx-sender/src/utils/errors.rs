@@ -5,9 +5,9 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum TokenMetadataError {
     #[error(transparent)]
-    AssetParseError(#[from] AssetError),
+    AssetParse(#[from] AssetError),
     #[error(transparent)]
-    NumberOverflowError(#[from] TryFromIntError),
+    NumberOverflow(#[from] TryFromIntError),
     #[error(transparent)]
-    TokenSymbolError(#[from] TokenSymbolError),
+    TokenSymbol(#[from] TokenSymbolError),
 }

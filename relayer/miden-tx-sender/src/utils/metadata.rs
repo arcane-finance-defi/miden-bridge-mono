@@ -6,7 +6,7 @@ pub fn decode_slot_into_token_metadata(
     slot: Word,
 ) -> Result<(TokenSymbol, u8), TokenMetadataError> {
     let [_max_supply, decimals, symbol, _x] = slot.each_ref();
-    let symbol = TokenSymbol::try_from(symbol.clone())?;
+    let symbol = TokenSymbol::try_from(*symbol)?;
     let decimals = u8::try_from(decimals.as_int())?;
     Ok((symbol, decimals))
 }

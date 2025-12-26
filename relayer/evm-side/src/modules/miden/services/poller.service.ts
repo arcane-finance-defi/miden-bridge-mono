@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { getAddressDecoder } from '@solana/kit';
 import BigNumber from 'bignumber.js';
 import {
   getMidenStartBlockScanEnvVarKey,
@@ -40,6 +41,25 @@ export class PollerService {
     this.logger.log(`Found ${events.length} exits from chain`);
     await this.exits.tx(async (em) => {
       for (const exit of events) {
+        const destinationChainKind = this.kindService.getChainKind(
+          BigInt(exit.destinationChain),
+        );
+
+        const receiverBytes = Buffer.from(
+          exit.receiver.replace('0x', ''),
+          'hex',
+        );
+        let receiver: string;
+        switch (destinationChainKind) {
+          case 'solana':
+            const decoder = getAddressDecoder();
+            receiver = decoder.decode(receiverBytes.subarray(0, 32));
+            break;
+          case 'evm':
+            receiver = '0x' + receiverBytes.subarray(0, 20).toString('hex');
+            break;
+        }
+
         await this.exits.insertExit(
           {
             from: {
@@ -48,9 +68,7 @@ export class PollerService {
             },
             to: {
               chainId: BigInt(exit.destinationChain),
-              chainKind: this.kindService.getChainKind(
-                BigInt(exit.destinationChain),
-              ),
+              chainKind: destinationChainKind,
             },
             assetAddress: exit.asset.originAddress,
             assetOrigin: {
@@ -63,7 +81,7 @@ export class PollerService {
             assetDecimals: exit.asset.decimals,
             assetSymbol: exit.asset.assetSymbol,
             blockNumber: exit.blockNumber,
-            receiver: exit.receiver,
+            receiver,
             calldata: exit.callData,
             callAddress: exit.callAddress,
           },
