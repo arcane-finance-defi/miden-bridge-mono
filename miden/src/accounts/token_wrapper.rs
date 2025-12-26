@@ -5,15 +5,9 @@ use miden_lib::{
     },
     AuthScheme,
 };
-use miden_objects::{
-    account::{
-        Account, AccountBuilder, AccountComponent, AccountStorageMode, AccountType, StorageSlot,
-    },
-    asset::TokenSymbol,
-    note::NoteTag,
-    utils::sync::LazyLock,
-    AccountError, Felt, Word,
-};
+use miden_objects::{account::{
+    Account, AccountBuilder, AccountComponent, AccountStorageMode, AccountType, StorageSlot,
+}, asset::TokenSymbol, note::NoteTag, utils::sync::LazyLock, AccountError, Felt, FieldElement, Word};
 
 use crate::accounts::components::token_wrapper_account_library;
 
@@ -27,7 +21,7 @@ pub fn bridge_note_tag() -> NoteTag {
 
 pub struct TokenWrapperAccount {
     origin_network: u64,
-    origin_address: [Felt; 3],
+    origin_address: [Felt; 4],
 }
 
 impl TokenWrapperAccount {
@@ -35,7 +29,7 @@ impl TokenWrapperAccount {
     // --------------------------------------------------------------------------------------------
 
     /// Creates a new [`BasicFungibleFaucet`] component from the given pieces of metadata.
-    pub fn new(origin_network: u64, origin_address: [Felt; 3]) -> Self {
+    pub fn new(origin_network: u64, origin_address: [Felt; 4]) -> Self {
         Self { origin_network, origin_address }
     }
 }
@@ -46,10 +40,16 @@ impl From<TokenWrapperAccount> for AccountComponent {
             token_wrapper_account_library(),
             vec![
                 StorageSlot::Value(Word::new([
-                    Felt::new(faucet.origin_network),
+                    faucet.origin_address[3],
                     faucet.origin_address[2],
                     faucet.origin_address[1],
                     faucet.origin_address[0],
+                ])),
+                StorageSlot::Value(Word::new([
+                    Felt::new(faucet.origin_network),
+                    Felt::ZERO,
+                    Felt::ZERO,
+                    Felt::ZERO,
                 ]))
             ]).expect("basic fungible faucet component should satisfy the requirements of a valid account component")
                 .with_supported_type(AccountType::FungibleFaucet)
@@ -62,7 +62,7 @@ fn builder_internal(
     decimals: u8,
     max_supply: Felt,
     origin_network: u64,
-    origin_address: [Felt; 3],
+    origin_address: [Felt; 4],
     account_storage_mode: AccountStorageMode,
 ) -> Result<AccountBuilder, AccountError> {
     Ok(AccountBuilder::new(init_seed)
@@ -81,7 +81,7 @@ pub struct CreateTokenWrapperAccountParams {
     pub decimals: u8,
     pub max_supply: Felt,
     pub origin_network: u64,
-    pub origin_address: [Felt; 3],
+    pub origin_address: [Felt; 4],
     pub account_storage_mode: AccountStorageMode,
     pub auth_scheme: AuthScheme,
 }
@@ -120,7 +120,7 @@ pub fn create_token_wrapper_account_builder(
     decimals: u8,
     max_supply: Felt,
     origin_network: u64,
-    origin_address: [Felt; 3],
+    origin_address: [Felt; 4],
     account_storage_mode: AccountStorageMode,
 ) -> Result<AccountBuilder, AccountError> {
     builder_internal(
