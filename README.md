@@ -1,6 +1,6 @@
 # Miden Privacy-preserving Crosschain Interoperability Solution
 
-A bridge solution for Miden network, designed to facilitate private token transfers between EVM, and Miden accounts. This bridge serves as an interim solution until the official AggLayer Unified Bridge is launched.
+A bridge solution for Miden network, designed to facilitate private token transfers between EVM and Miden accounts. This bridge serves as an interim solution until the official AggLayer Unified Bridge is launched.
 
 ## Overview
 
@@ -59,7 +59,7 @@ command
 - Node.js (version X.X.X or higher)
 - Rust ^1.88.0
 - npm or yarn
-- Access to Ethereum Sepolia testnet and an address with some gas (you can get it from faucet)
+- Access to Ethereum Sepolia testnet and an address with some gas (you can get it from a faucet)
 - Access to Polygon PoS Amoy testnet
 - Foundry ^1.1.0 (https://getfoundry.sh/)
 
@@ -67,10 +67,10 @@ command
 
 1. Init miden cli with `miden-bridge init` command
 2. Generate the wallet with `miden-bridge new-wallet`. It will print "Setting account <YOUR MIDEN ADDRESS> as the default account ID." to the console, remember your address.
-3. Generate the recipient to the wallet address `miden-bridge recipient -a <YOUR MIDEN ADDRESS>`. Both Recepient and Serial number will be printed to the console, remember them. Note that you can only bridge to the given recepient once.
-4. Approve Sepolia USDC for the `MidenBridgeExtension` contract on Sepolia, you can get some on Sepolia Uniswap. The approval can be done in any convenient way, we suggest using a Foundry tool `cast`.
+3. Generate the recipient to the wallet address `miden-bridge recipient -a <YOUR MIDEN ADDRESS>`. Both Recepient and Serial number will be printed to the console, remember them. Note that you can only bridge to the given recipient once.
+4. Approve Sepolia USDC for the `MidenBridgeExtension` contract on Sepolia, you can get some on Sepolia Uniswap. The approval can be done in any convenient way, we suggest using the Foundry tool `cast`.
    `cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR EVM PRIVATE KEY> -f <YOUR EVM ADDRESS> 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "approve(address,uint256)" 0x0b03df1D4B3884b8987254D0C990342B571183AF <AMOUNT>)"`
-5. Execute [bridgeAndCall](https://github.com/arcane-finance-defi/miden-bridge-evm/blob/488339116ac24b389e48d08d6967dcaffb06db8e/src/MidenBridgeExtension.sol#L39) method of the `MidenBridgeExtension` contract. Use the recipient as the calldata. Set the destination chain param to miden id `9966` and set all addreses to zero (0x0000000000000000000000000000000000000000)
+5. Execute [bridgeAndCall](https://github.com/arcane-finance-defi/miden-bridge-evm/blob/488339116ac24b389e48d08d6967dcaffb06db8e/src/MidenBridgeExtension.sol#L39) method of the `MidenBridgeExtension` contract. Use the recipient as the calldata. Set the destination chain param to miden id `9966` and set all addresses to zero (0x0000000000000000000000000000000000000000)
    `cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR EVM PRIVATE KEY> -f <YOUR EVM ADDRESS> 0x0b03df1D4B3884b8987254D0C990342B571183AF "bridgeAndCall(address,uint256,uint32,address,address,bytes,bool)" 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 <AMOUNT> 9966 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 <YOUR RECIPIENT> false)"`
 6. Find Miden token wrapper address for your EVM token (for Sepolia USDC it's 0x4de3bc8d67731a2067af0fcc7a2e34), this wrapper address is also a FAUCET_ID for the next step.
 7. Call `miden-bridge sync`
@@ -90,17 +90,17 @@ command
 ### Mixer
 
 1. Init miden cli with `miden-bridge init` command. Create or import your wallet account with the asset in the vault (for example, the address from EVM -> Miden bridging)
-2. Generate the recipient to the wallet address `miden-bridge recipient --note-type crosschain --dest-chain 11155111 --dest-address <RECEIVER EVM ADDRESS>`. Recepient, BRIDGE Serial number, and Serial number will be printed to the console, remember them.
-3. Approve Sepolia USDC for the `MidenBridgeExtension` contract on Sepolia, you can get some on Sepolia Uniswap. The approval can be done in any convenient way, we suggest using a Foundry tool `cast`.
+2. Generate the recipient to the wallet address `miden-bridge recipient --note-type crosschain --dest-chain 11155111 --dest-address <RECEIVER EVM ADDRESS>`. Recipient, BRIDGE Serial number, and Serial number will be printed to the console, remember them.
+3. Approve Sepolia USDC for the `MidenBridgeExtension` contract on Sepolia, you can get some on Sepolia Uniswap. The approval can be done in any convenient way, we suggest using the Foundry tool `cast`.
    `cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR PRIVATE KEY> -f <YOUR ADDRESS> 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "approve(address,uint256)" 0x82a888861cd58e18c474c1d3daf8acc502e5e6ea <AMOUNT>)"`
-4. Execute [bridgeAndCall](https://github.com/arcane-finance-defi/miden-bridge-evm/blob/488339116ac24b389e48d08d6967dcaffb06db8e/src/MidenBridgeExtension.sol#L39) method of the `MidenBridgeExtension` contract. Use the recipient as the calldata. Set the destination chain param to miden id `9966` and set all addreses to zero (0x0000000000000000000000000000000000000000)
+4. Execute [bridgeAndCall](https://github.com/arcane-finance-defi/miden-bridge-evm/blob/488339116ac24b389e48d08d6967dcaffb06db8e/src/MidenBridgeExtension.sol#L39) method of the `MidenBridgeExtension` contract. Use the recipient as the calldata. Set the destination chain param to miden id `9966` and set all addresses to zero (0x0000000000000000000000000000000000000000)
    `cast publish -r https://ethereum-sepolia-rpc.publicnode.com "$(cast mktx -r https://ethereum-sepolia-rpc.publicnode.com --private-key <YOUR PRIVATE KEY> -f <YOUR ADDRESS> 0x82a888861cd58e18c474c1d3daf8acc502e5e6ea "bridgeAndCall(address,uint256,uint32,address,address,bytes,bool)" 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 <AMOUNT> 9966 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000 <YOUR RECIPIENT> false)"`
 5. Provide the intermediate note to the mixer offchain service `miden-bridge mix --serial-number <SERIAL NUMBER> --bridge-serial-number <BRIDGE SERIAL NUMBER> --dest-chain 11155111 --dest-address <RECEIVER EVM ADDRESS> --faucet-id 0xd354f13600df2920000c682da84a64 --asset-amount <AMOUNT>`
 6. Wait for the offchain service execution, the balance should update in your EVM wallet
 
 # Script
 
-You could use the script for the testing purposes.
+You could use the script for testing purposes.
 
 `bash -c ./bridge.sh`
 
