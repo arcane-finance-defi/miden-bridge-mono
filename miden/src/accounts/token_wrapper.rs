@@ -34,7 +34,7 @@ impl TokenWrapperAccount {
     // CONSTRUCTORS
     // --------------------------------------------------------------------------------------------
 
-    /// Creates a new [`BasicFungibleFaucet`] component from the given pieces of metadata.
+    /// Creates a new [`TokenWrapperAccount`] component with the given origin network and address.
     pub fn new(origin_network: u64, origin_address: [Felt; 3]) -> Self {
         Self { origin_network, origin_address }
     }
@@ -51,7 +51,7 @@ impl From<TokenWrapperAccount> for AccountComponent {
                     faucet.origin_address[1],
                     faucet.origin_address[0],
                 ]))
-            ]).expect("basic fungible faucet component should satisfy the requirements of a valid account component")
+            ]).expect("token wrapper account component should satisfy the requirements of a valid account component")
                 .with_supported_type(AccountType::FungibleFaucet)
     }
 }
